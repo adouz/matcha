@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/singup.css">
+</head>
+<body>
+ <nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="/">Matcha</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav">
+      <a class="nav-item nav-link" href="/login">Login</a>
+      <a class="nav-item nav-link active" href="/singup">Sing-Up</a>
+    </div>
+  </div>
+</nav>
+<p>
+  <ul>
+    <% if (typeof errors != 'undefined'){ %>
+    <% errors.forEach((err) => {%>
+      <li><%=err.msg%></li>
+      <% }); %>
+    <%}%>
+    </ul>
+</p>
+<form action="/singup" method="post" class="form">
+ <div class="form-group">
+<div class="form-row">
+        <div class="col-auto">
+            <input type="text" class="form-control" name="fname" id="fname" placeholder="First Name" value='<% if(typeof fname != 'undefined' ) { %><%=fname%><%}%>'>
+        </div>
+        <div class="col-auto">
+                <input type="text" class="form-control" name="lname" id="lname" placeholder="Last Name" value='<% if(typeof lname != 'undefined' ) { %><%=lname%><%}%>'>
+            </div>    
+        <div class="col-auto">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <div class="input-group-text">@</div>
+                </div>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Username" value='<% if(typeof user != 'undefined' ) { %><%=user%><%}%>'>
+            </div>
+        </div>
+    </div>
+    <div class="well"> 
+      <div class="form-group">
+      <label>Date of Birth</label>
+      <input type="date" class="form-control" id="birthday" name="birthday" placeholder="Date of Birth" value='<% if(typeof day != 'undefined' ) { %><%=day%><%}%>'>
+    </div>
+  </div>
+  <div class="form-group">
+    <input type="email" class="form-control" id="email" name="email" placeholder="Enter email" value='<% if(typeof mail != 'undefined' ) { %><%=mail%><%}%>'>
+    <small id="emailHelp" class="form-text text-muted">After Registration you need to Confirm your email</small>
+  </div>
+  <div class="form-group">
+    <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+  </div>
+  <button type="submit" name="submit" value="submit" class="btn btn-primary">Sing-Up</button>
+</form>
+</html>
