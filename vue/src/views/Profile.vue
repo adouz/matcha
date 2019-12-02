@@ -1,11 +1,18 @@
 <template>
   <!-- TODO: not redricting from profile to other profile -->
   <div v-loading="loading">
-    <div class="columns">
+    <article v-if="blocked" class="message is-danger">
+      <div class="message-body">
+        {{blockedmsg}}
+        <!-- Lorem ipsum dolor sit amet, consectetur adipiscing elit. <strong>Pellentesque risus mi</strong>, tempus quis placerat ut, porta nec nulla. Vestibulum rhoncus ac ex sit amet fringilla. Nullam gravida purus diam, et dictum <a>felis venenatis</a> efficitur. Aenean ac <em>eleifend lacus</em>, in mollis lectus. Donec sodales, arcu et sollicitudin porttitor, tortor urna tempor ligula, id porttitor mi magna a neque. Donec dui urna, vehicula et sem eget, facilisis sodales sem. -->
+      </div>
+    </article>
+
+    <div v-if="!blocked" class="columns">
       <div class="column">
         <div class="box">
           <figure class="image is-square">
-            <img :src="srcProfile.url" @click="Profile = true">
+            <img v-if="srcProfile.url" :src="srcProfile.url" @click="Profile = true">
           </figure>
         </div>
         <!--<div class="columns is-gapless is-mobile">
@@ -57,7 +64,10 @@
                 {{ fullname }}
                 <span class="title is-6">· {{ age }}</span>
                 <!-- green dot for online users -->
-                <el-tooltip class="item" effect="dark" :content="isOnline" placement="right">
+                <el-tooltip v-if="!lastconnnection" class="item" effect="dark" :content="isOnline" placement="right">
+                  <span :class="isOnline"></span>
+                </el-tooltip>
+                <el-tooltip v-else class="item" effect="dark" :content="'offline: ' + lastconnnection" placement="right">
                   <span :class="isOnline"></span>
                 </el-tooltip>
               </span>
@@ -213,54 +223,52 @@
 </template>
 
 <script>
+import moment from 'moment'
 export default {
   name: "Profile",
   data() {
     return {
       user: "",
-      fullname: "Test user",
+      fullname: "user",
       age: "0",
-      address: '',
+      address: "",
       sex: "Man",
       looking: "Women",
-      bio:
-        "She was close behind it when she went on just as I'd taken the highest tree in front of them, with her face brightened up again.) 'Please your Majesty,' said the Hatter, 'you wouldn't talk about.",
+      bio: "bio...",
       tags: [],
       isOnline: "waiting",
+      lastconnnection: '',
       Image0: false,
       Image1: false,
       Image2: false,
       Image3: false,
       Profile: false,
+      blocked: false,
+      blockedmsg: "this user blocked you",
       srcProfile: {
         image_id: 0,
-        url:
-          "https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png",
+        url: require("@/assets/unknown.png"),
         image_type: "PROFIL"
       },
       src: [
         {
           image_id: 0,
-          url:
-            "https://static.businessnews.com.au//sites/all/themes/bn/images/placeholder.svg",
+          url: require("@/assets/pic.svg"),
           image_type: "OTHER"
         },
         {
           image_id: 1,
-          url:
-            "https://static.businessnews.com.au//sites/all/themes/bn/images/placeholder.svg",
+          url: require("@/assets/pic.svg"),
           image_type: "OTHER"
         },
         {
           image_id: 2,
-          url:
-            "https://static.businessnews.com.au//sites/all/themes/bn/images/placeholder.svg",
+          url: require("@/assets/pic.svg"),
           image_type: "OTHER"
         },
         {
           image_id: 3,
-          url:
-            "https://static.businessnews.com.au//sites/all/themes/bn/images/placeholder.svg",
+          url: require("@/assets/pic.svg"),
           image_type: "OTHER"
         }
       ],
@@ -271,20 +279,22 @@ export default {
       Popularity_type: "is-success"
     };
   },
-  beforeRouteLeave (to, from, next) {
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", {user: this.userdata.user_name,token: token}).then(()=>{
-      next();
-    })
+  beforeRouteLeave(to, from, next) {
+    console.log('ROUTER LEAVE');
+    this.sockets.unsubscribe("isOnline" + this.$route.params.username);
+    next();
   },
-  created(){
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", {user: this.userdata.user_name,token: token}).then(
-      () => {
-            this.UpdateProfile();
-      }
-    )
-    console.log('updating DATA');
+  created() {
+    document.title = this.$route.params.username + " Profile";
+    console.log('chkon 3yt 3lik');
+    this.$store
+      .dispatch("login", { user: this.userdata.user_name })
+      .then(() => {
+        this.UpdateProfile();
+      })
+      .catch(err => {
+        console.log(err);
+      });
   },
   computed: {
     userdata: function() {
@@ -296,59 +306,107 @@ export default {
     user_Tags: function() {
       return this.$store.getters.getTags;
     },
-    user_likes: function () {
+    user_likes: function() {
       return this.$store.getters.getLikes;
     }
   },
   watch: {
-    $route: "UpdateProfile"
+    $route: function (to, from) {
+      this.sockets.unsubscribe("isOnline" + from.params.username);
+      this.UpdateProfile();
+    }
   },
   mounted() {
-    this.$socket.on("isOnline" + this.$route.params.username, data => {
-      if (data) this.isOnline = "online";
-      else this.isOnline = "offline";
-    });
+    // this.sockets.subscribe("isOnline" + this.$route.params.username, data => {
+    //   console.log('isOnline '+this.$route.params.username);
+    //   if (data.online) {
+    //         this.lastconnnection = '';
+    //         this.isOnline = "online";
+    //   }else{
+    //     this.isOnline = "offline";
+    //     this.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
+    //   }  
+    // });
   },
   methods: {
     UpdateProfile() {
       console.log("PROFILE UPDATE");
+      this.blocked = false;
+      this.sockets.subscribe("isOnline" + this.$route.params.username, data => {
+          if (data.online){
+            this.lastconnnection = '';
+            this.isOnline = "online";
+          } 
+          else{
+            this.isOnline = "offline";
+            this.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
+          }
+      });
       this.UserProfile(this.$route.params.username);
     },
     UserProfile(user) {
-      console.log("connected user:: ", this.userdata.user_name);
-      console.log("user:: ", user);
       if (user == this.userdata.user_name) {
         //personal profile
         this.isUserProfile = true;
-        console.log(this.userdata, this.user_Images, this.user_Tags);
         this.fill_Profile(this.userdata, this.user_Images, this.user_Tags);
         this.loading = false;
         // console.log(this.user_Tags);
         // console.log(this.user_Images);
       } else {
-        /*To avoid auto visite history*/
-        this.$http
-        .post("visite", {user_visited: this.$route.params.username})
-        .then(res => {console.log(res.data)})
-        .catch(err => {console.log(err);});
+        // /*To avoid auto visite history*/
+        // this.$http
+        //   .post("visite", { user_visited: this.$route.params.username })
+        //   .then(res => {
+        //     console.log(res.data);
+        //     this.$socket.emit("notifyUser", {
+        //       to: user,
+        //       title: "profile checked",
+        //       msg: this.userdata.user_name + " checked your profile.",
+        //       token: localStorage.getItem("token")
+        //     });
+        //   })
+        //   .catch(err => {
+        //     console.log(err);
+        //   });
         // other user profile
         this.$http
           .get("/userdata/" + user)
           .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
-
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
-
             this.isUserProfile = false;
             if (res.data.success) {
               var resdata = res.data.data;
-              console.log(resdata);
+              /*visite*/
+              this.$http
+                .post("visite", { user_visited: this.$route.params.username })
+                .then(res => {
+                  res.data;
+                  this.$socket.emit("notifyUser", {
+                    to: user,
+                    title: "profile checked",
+                    msg: this.userdata.user_name + " checked your profile."
+                  });
+                })
+                .catch(err => {
+                  console.log(err);
+                });
               this.fill_Profile(resdata.user, resdata.images, resdata.tags);
+            } else if (
+              res.data.msg === "blocked you" ||
+              res.data.msg === "you blocked"
+            ) {
+              if (res.data.msg === "blocked you") {
+                this.blocked = true;
+                this.blockedmsg =
+                  "to see this profile you have to unblock " +
+                  res.data.user +
+                  " first.";
+              } else if (res.data.msg === "you blocked") {
+                this.blocked = true;
+                this.blockedmsg =
+                  "this person blocked you, you are no longer able to see his profile";
+              }
             } else {
               this.fullname = res.data.error;
-              console.log(res.data.error);
               this.$router.push({ name: "404" });
             }
             this.loading = false;
@@ -359,12 +417,12 @@ export default {
       }
     },
     fill_Profile(user, images, tags) {
-      if (!this.isUserProfile){
+      if (!this.isUserProfile) {
         this.user_likes.forEach(liked => {
-          if (liked.liked_user == user.user_name){
-            this.like_button = 'is-danger';
+          if (liked.liked_user == user.user_name) {
+            this.like_button = "is-danger";
           }
-        });  
+        });
       }
       this.user = user.user_name;
       this.fullname = user.user_fullname;
@@ -394,7 +452,6 @@ export default {
       }
       //users images
       images.forEach(img => {
-        console.log(img.url);
         if (img.image_type != "PROFIL") {
           this.src.push(img);
         } else {
@@ -402,17 +459,24 @@ export default {
         }
       });
       //Online or Offline
-      this.$socket.emit("Online", user.user_name);
+      this.$socket.emit("Online", {
+        username: user.user_name
+      });
     },
     likebutton() {
-      if (this.like_button) { // unliked
+      if (this.like_button) {
+        // unliked
         console.log(this.userdata.user_name, " unliked ", this.user);
         this.$http
           .post("unliked/" + this.user)
           .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
             console.log(res.data);
+            if (res.data === "unmatched") {
+              this.$socket.emit("deleteroom", {
+                blocker: this.userdata.user_name,
+                blocked: this.user
+              });
+            }
             this.$socket.emit("notifyUser", {
               to: this.user,
               title: "unliked",
@@ -423,32 +487,46 @@ export default {
             console.log(err);
           });
         this.like_button = "";
-      } else { // liked
+      } else {
+        // liked
         console.log(this.userdata.user_name, " liked ", this.user);
         this.$http
           .post("liked/" + this.user)
           .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
-              console.log(res.data);
-              if (res.data === 'its a match'){
+            console.log(res.data);
+            if (res.data !== "block") {
+              if (res.data === "its a match") {
+                this.like_button = "is-danger";
                 this.$notify({
                   title: "Its A Match",
-                  message: 'you have a new Match with '+this.user,
+                  message: "you have a new Match with " + this.user,
                   type: "success",
                   position: "bottom-left"
                 });
+                this.$socket.emit("notifyUser", {
+                  to: this.user,
+                  title: "Its A Match",
+                  msg: "you have a new Match with " + this.userdata.user_name
+                });
+              } else {
+                this.like_button = "is-danger";
+                this.$socket.emit("notifyUser", {
+                  to: this.user,
+                  title: "liked",
+                  msg: this.userdata.user_name + " liked  you."
+                });
               }
-            this.$socket.emit("notifyUser", {
-              to: this.user,
-              title: "liked",
-              msg: this.userdata.user_name + " liked  you."
-            });
+            } else {
+              this.$notify.error({
+                title: "Error",
+                message: "unauthorized actions have been detected",
+                position: "bottom-left"
+              });
+            }
           })
           .catch(err => {
             console.log(err);
           });
-        this.like_button = "is-danger";
       }
     },
     report() {
@@ -456,9 +534,6 @@ export default {
       this.$http
         .post("report/" + this.user)
         .then(res => {
-          if (res.data.message === "Failed to authenticate token.")
-            this.$router.push({ path: "/login" });
-
           console.log(res.data);
         })
         .catch(err => {
@@ -477,10 +552,11 @@ export default {
       this.$http
         .post("block/" + this.user)
         .then(res => {
-          if (res.data.message === "Failed to authenticate token.")
-            this.$router.push({ path: "/login" });
-
-          console.log(res.data);
+          res;
+          this.$socket.emit("deleteroom", {
+            blocker: this.userdata.user_name,
+            blocked: this.user
+          });
         })
         .catch(err => {
           console.log(err);

@@ -13,7 +13,7 @@ exports.addVisite = (user_visited, username, result) => {
 
 exports.getVisites =  function (username) {
     return new Promise((resolve, reject) => {
-            sql.query("SELECT user,DATE_FORMAT(time,'%d/%m/%Y') as 'date',DATE_FORMAT(time,'%h:%i') as 'time'  FROM `visite_history` WHERE `user_visited` = ?  order by time desc",[username], (err, res) => {
+            sql.query("SELECT user,DATE_FORMAT(time,'%d/%m/%Y') as 'date',DATE_FORMAT(time,'%h:%i') as 'time'  FROM `visite_history` WHERE `user_visited` = ?  order by date,time desc",[username], (err, res) => {
         if (err) 
             reject(err);
         else 

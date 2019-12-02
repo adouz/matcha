@@ -11,7 +11,7 @@
           <b-input v-model="login" maxlength="30"></b-input>
         </b-field>
         <b-field label="Password" :type="Erorrs.password.err" :message="Erorrs.password.msg">
-          <b-input type="password" v-model="password" maxlength="30"></b-input>
+          <b-input type="password" v-model="password" maxlength="30" password-reveal></b-input>
         </b-field>
         <div class="level">
           <a class="level-left is-size-7" @click="ForgetPassword(true)">Forget Password?</a>
@@ -72,7 +72,7 @@ export default {
         let loc = res.data.loc.split(",");
         this.loc.lat = loc[0];
         this.loc.lng = loc[1];
-        this.loc.addresse = res.data.city+', '+res.data.country;
+        this.loc.addresse = res.data.city + ", " + res.data.country;
       })
       .catch(error => {
         console.log(error);
@@ -112,27 +112,34 @@ export default {
               this.Erorrs.login.err = "is-success";
               this.$store
                 .dispatch("login", {
-                  user: this.login,
-                  token: res.data.token
+                  user: this.login
                 })
                 .then(data => {
-                  this.$socket.connect();
+                  let imgProfil =0;
+                   data.data.images.forEach(obj => {
+                    if (obj.image_type === "PROFIL")
+                      imgProfil = 1;
+                    });
+                  console.log("HERRE",imgProfil);
                   if (
                     !data.data.user.user_gender ||
                     !data.data.user.user_bio ||
-                    !data.data.user.user_prefer
+                    !data.data.user.user_prefer ||
+                    !imgProfil
                   ) {
-                    this.$router.push({ path: "/settings/profile" });
-                  } else this.$router.push({ path: "/dashboard" });
+                    window.location = "/settings/profile";
+                  } else window.location = "/dashboard";
                 })
-                .catch(err => console.error(err));
+                .catch(err => {
+                  console.error(err);
+                });
             }
           })
           .catch(err => console.error(err));
       }
     },
     validate() {
-      if (!this.login.match(/^[a-z0-9_]{2,30}$/g)) {
+      if (!this.login.match(/^[a-z]+([_-]?[a-z0-9])*$/g)|| this.login.length > 30 || this.login.length < 3) {
         this.Erorrs.login.err = "is-danger";
         this.Erorrs.login.msg = "please Entre a valid Username";
         return false;
@@ -166,25 +173,38 @@ export default {
       this.Forget_Password = value;
     },
     reset() {
-      if (this.validate_reset()) {
+      if (this.validate_reset(this.reset_email)) {
         this.$http
-          .post("reset", { email: this.reset_email })
-          .then(res => console.log(res))
+          .post("/resetPasswd", { email: this.reset_email })
+          .then(res => {
+            if (res.data === "not found") {
+              this.Erorrs.reset_email.err = "is-danger";
+              this.Erorrs.reset_email.msg = "We dont have this email!";
+            } else if (res.data === "sent") {
+              this.Erorrs.reset_email.msg =
+                "please click link in your email to reset your password";
+            } else {
+              this.Erorrs.reset_email.err = "is-danger";
+              this.Erorrs.reset_email.msg =
+                "There was an error. Please try again later.";
+            }
+            console.log(res);
+          })
           .catch(err => console.error(err));
       }
     },
-    validate_reset() {
+    validate_reset(email) {
       if (
-        !this.reset_email.match(
+        !email.match(
           /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/gi
         )
       ) {
-        this.Errors.reset_email.err = "is-danger";
-        this.Errors.reset_email.msg = "please Entre a valide Email";
+        this.Erorrs.reset_email.err = "is-danger";
+        this.Erorrs.reset_email.msg = "please Entre a valide Email";
         return false;
       } else {
-        this.Errors.reset_email.err = "is-success";
-        this.Errors.reset_email.msg = "";
+        this.Erorrs.reset_email.err = "is-success";
+        this.Erorrs.reset_email.msg = "";
       }
       return true;
     }

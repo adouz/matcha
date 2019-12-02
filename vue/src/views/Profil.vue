@@ -8,25 +8,17 @@
         </center>
         <el-menu default-active="0">
           <el-menu-item index="0">
-            <i class="el-icon-user-solid"></i>
-            <span>Profil</span>
+            <b-icon icon="user-alt"></b-icon>Profil
           </el-menu-item>
+
           <router-link class="link" to="account">
             <el-menu-item index="1">
-              <i class="el-icon-s-tools"></i>
-              Account
-            </el-menu-item>
-          </router-link>
-          <router-link class="link" to="visite">
-            <el-menu-item index="2">
-              <i class="el-icon-view"></i>
-              Visite
+              <b-icon icon="user-shield"></b-icon>Account
             </el-menu-item>
           </router-link>
           <router-link class="link" to="blocked">
-            <el-menu-item index="3">
-              <i class="el-icon-error"></i>
-              Blocked
+            <el-menu-item index="2">
+              <b-icon icon="eye-slash"></b-icon>Blocked
             </el-menu-item>
           </router-link>
         </el-menu>
@@ -235,8 +227,6 @@
           <!-- MAP-->
           <b-field
             :label-position="labelPosition"
-            :type="Errors.bio.err"
-            :message="Errors.bio.msg"
             label="choose your location"
           ></b-field>
           <!-- <map-location-selector :latitude="32.8811" :longitude="-6.9063"
@@ -355,39 +345,43 @@ export default {
     };
   },
   beforeRouteLeave(to, from, next) {
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", { user: this.user.user_name, token: token });
-    console.log(
-      !this.user.user_gender,
-      !this.user.user_bio,
-      !this.user.user_prefer,
-      !this.dropFiles.length,
-      !this.tags.length,
-      !this.imageProfil.length
-    );
-    if (
-      !this.user.user_gender ||
-      !this.user.user_bio ||
-      !this.user.user_prefer ||
-      !this.dropFiles.length ||
-      !this.tags.length ||
-      !this.imageProfil.length
-    ) {
-      this.$message({
-        message: "Warning, you have to fill your profile first",
-        type: "warning"
+    this.$store
+      .dispatch("login", { user: this.user.user_name })
+      .then(res => {
+        var images = res.data.images;
+        var profil;
+        images.forEach(element => {
+          if (element.image_type === "PROFIL") {
+            profil = element;
+          }
+        });
+        if (
+          (!this.user.user_gender ||
+          !this.user.user_bio ||
+          !this.user.user_prefer ||
+          !profil) && to.path !== "/logout"
+        ) {
+          this.$message({
+            message: "Warning, you have to fill your profile first",
+            type: "warning"
+          });
+        } else next();
+      })
+      .catch(err => {
+        console.log(err);
       });
-    } else next();
   },
   created() {
     console.log(this.user_images);
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", { user: this.user.user_name, token: token }).then(
-      res => {
-            this.updateProfile();
-      }
-    );
-    this.loadingIMG =false;
+    this.$store
+      .dispatch("login", { user: this.user.user_name })
+      .then(res => {
+        this.updateProfile();
+      })
+      .catch(err => {
+        console.log(err);
+      });
+    this.loadingIMG = false;
   },
   mounted() {
     // console.log(this.user);
@@ -428,32 +422,39 @@ export default {
     }
   },
   methods: {
-    updateProfile(){
-       if (this.user.user_gender == "M") this.man = "is-info";
-    else if (this.user.user_gender == "F") this.woman = "is-danger";
-    if (this.user.user_prefer == "M") this.men = "is-info";
-    else if (this.user.user_prefer == "F") this.women = "is-danger";
-    else if (this.user.user_prefer == "X") this.other = "is-warning";
-    this.$http
-      .get("/tags")
-      .then(res => (this.autocompleteItems = res.data))
-      .catch(err => console.log(err));
-    this.tags = this.user_tags;
-    console.log('before filling::: ',this.user_images);
-    this.user_images.forEach((element, index) => {
-      if (this.user_images[index].image_type != "PROFIL")
-        this.dropFiles.push(this.user_images[index]);
-      else this.imageProfil.push(this.user_images[index]);
-    });
-    this.center = { lat: this.user.latitude, lng: this.user.longitude };
-    this.start = { lat: this.user.latitude, lng: this.user.longitude };
-    this.user_location.user_addresse = this.user.user_addresse;
-    this.user_location.latitude = this.user.latitude;
-    this.user_location.longitude = this.user.longitude;
+    updateProfile() {
+      if (this.user.user_gender == "M") this.man = "is-info";
+      else if (this.user.user_gender == "F") this.woman = "is-danger";
+      if (this.user.user_prefer == "M") this.men = "is-info";
+      else if (this.user.user_prefer == "F") this.women = "is-danger";
+      else if (this.user.user_prefer == "X") this.other = "is-warning";
+      this.$http
+        .get("/tags")
+        .then(res => (this.autocompleteItems = res.data))
+        .catch(err => console.log(err));
+      this.tags = this.user_tags;
+      console.log("before filling::: ", this.user_images);
+      this.user_images.forEach((element, index) => {
+        if (this.user_images[index].image_type != "PROFIL")
+          this.dropFiles.push(this.user_images[index]);
+        else this.imageProfil.push(this.user_images[index]);
+      });
+      this.center = { lat: this.user.latitude, lng: this.user.longitude };
+      this.start = { lat: this.user.latitude, lng: this.user.longitude };
+      this.user_location.user_addresse = this.user.user_addresse;
+      this.user_location.latitude = this.user.latitude;
+      this.user_location.longitude = this.user.longitude;
     },
     LocationUpdated(m) {
       this.start = m.latLng;
       this.geoCoder(m.latLng, res => {
+        let addresse = "";
+        if(res.address_components[res.address_components.length-4])
+          addresse+= res.address_components[res.address_components.length-4].long_name+", ";
+        if(res.address_components[res.address_components.length-1])
+          addresse+= res.address_components[res.address_components.length-1].long_name;
+        console.log("ADRESSE->", addresse,res);
+        //this.user.user_addresse = addresse;
         this.user.user_addresse = res.formatted_address;
         this.user.longitude = res.geometry.location.lng();
         this.user.latitude = res.geometry.location.lat();
@@ -543,12 +544,14 @@ export default {
         if (element.uid === file.uid) {
           // console.log(element.image_id);
           this.dropFiles.splice(index, 1);
-          this.user_images.splice(index,1);
+          this.user_images.splice(index, 1);
           this.$http
-            .post("/imagesdel/" + this.user.user_id, {
+            .post("/imagesdel/" , {
               image_id: element.image_id
             })
-            .then(res => res.data)
+            .then(res => {
+              res.data;
+            })
             .catch(err => console.error(err));
         }
       });
@@ -556,12 +559,17 @@ export default {
         if (element.uid === file.uid) {
           // console.log(this.imageProfil[index]);
           this.imageProfil.splice(index, 1);
-          this.user_images.splice(index,1);
+          this.user_images.splice(index, 1);
           this.$http
-            .post("/imagesdel/" + this.user.user_id, {
+            .post("/imagesdel/" , {
               image_id: element.image_id
             })
-            .then(res => res.data)
+            .then(res => {
+              res.data;
+              console.log("call REFRESH");
+              this.$root.$emit("refreshAvatar");
+              //window.location.reload()
+            })
             .catch(err => console.error(err));
         }
       });
@@ -590,14 +598,17 @@ export default {
               user_id: this.user.user_id
             })
             .then(res => res.data)
-            .catch(err => console.error(err));
+            .catch(err => console.log(err));
+            console.log("newtags", this.newTags,
+              "selectedtags :", this.selectedTags,
+              "user_id :", this.user.user_id)
         }
         // console.log(this.user);
         var user_data = this.user;
         /* Update user */
         // console.log(this.user_location.latitude);
         this.$http
-          .put("users/" + this.user.user_id, {
+          .put("users/", {
             user_fullname: user_data.user_fullname,
             user_gender: user_data.user_gender,
             user_bio: user_data.user_bio,
@@ -615,8 +626,9 @@ export default {
             //this.$store.dispatch("update", user_data);
           })
           .catch(err => console.error(err));
+        console.log(this.dropFiles.length, "+++ ", this.imageProfil);
         /* Upload images */
-        if (this.dropFiles.length > 0 || this.imageProfil > 0) {
+        if (this.dropFiles.length > 0 || this.imageProfil.length > 0) {
           const images = [];
           this.dropFiles.forEach(element => {
             let image = new Image();
@@ -633,9 +645,9 @@ export default {
           console.log(images);
           console.log(this.user_images);
           if (images.length > 0) {
-          this.loadingFORM = true;
+            this.loadingFORM = true;
             this.$http
-              .post("/images/" + this.user.user_id, images)
+              .post("/images", images)
               .then(res => {
                 console.log(res.data.data);
                 console.log("BEFORE", this.user_images);
@@ -646,6 +658,12 @@ export default {
                 // }
                 data.forEach(element => {
                   this.user_images.push(element);
+                  console.log("element", element);
+                  if (element.image_type === "profil") {
+                    console.log("call REFRESH");
+                    this.$root.$emit("refreshAvatar");
+                    //window.location.reload()
+                  }
                 });
                 // this.user_images.push(res.data);
                 console.log("AFTER", this.user_images);
@@ -714,7 +732,7 @@ export default {
         this.Errors.gender.msg = "";
       }
 
-      if (!this.user.user_prefer.match(/^\b[MFX]{1}\b/g)) {
+      if (!this.user.user_prefer || !this.user.user_prefer.match(/^\b[MFX]{1}\b/g)) {
         this.Errors.sexualpreference.err = "is-danger";
         this.Errors.sexualpreference.msg = "Please choose a sexual preference";
         return false;
@@ -723,14 +741,14 @@ export default {
         this.Errors.sexualpreference.msg = "";
       }
       if (this.imageProfil.length < 0) {
-        this.Errors.bio.err = "is-danger";
-        this.Errors.bio.msg = "Please upload a profil picture";
+        this.Errors.uploadProfilImage.err = "is-danger";
+        this.Errors.uploadProfilImage.msg = "Please upload a profil picture";
         return false;
       } else {
-        this.Errors.bio.err = "is-success";
-        this.Errors.bio.msg = "";
+        this.Errors.uploadProfilImage.err = "is-success";
+        this.Errors.uploadProfilImage.msg = "";
       }
-      if (!this.user.user_bio) {
+      if (!this.user.user_bio ||!this.user.user_bio.match(/.*\S.*/)) {
         this.Errors.bio.err = "is-danger";
         this.Errors.bio.msg = "Please write something about you";
         return false;

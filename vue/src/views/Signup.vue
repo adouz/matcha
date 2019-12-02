@@ -10,13 +10,13 @@
             </b-datepicker>
         </b-field>
         <b-field label="Username" :type="Errors.username.err" :message="Errors.username.msg">
-            <b-input v-model="username" maxlength="30"></b-input>
+            <b-input v-model="username" maxlength="30" autocomplete="new-username"></b-input>
         </b-field>
         <b-field label="Email" :type="Errors.email.err" :message="Errors.email.msg">
-            <b-input type="email" v-model="email" maxlength="30"></b-input>
+            <b-input type="email" v-model="email" maxlength="30" autocomplete="new-mail"></b-input>
         </b-field>
-        <b-field label="Password" :type="Errors.password.err" :message="Errors.password.msg">
-            <b-input type="password" v-model="password" maxlength="30"></b-input>
+        <b-field label="Password" :type="Errors.password.err" :message="Errors.password.msg" >
+            <b-input type="password" v-model="password" maxlength="30" autocomplete="new-password" password-reveal></b-input>
         </b-field>
         <b-message v-if="err" type="is-danger">YOU HAVE AN ERROR PLEASE TRY AGAIN!<br>OR RELOAD PAGE!</b-message>
         <div class="level-right">
@@ -127,7 +127,7 @@ export default {
             this.Errors.fullname.msg = "";
         }
 
-        if (!this.username.match(/^[a-z0-9_]{2,30}$/g)){ //a-z 0-9 _ 2~30
+        if (!this.username.match(/^[a-z]+([_-]?[a-z0-9])*$/g) || this.username.length > 30 || this.username.length < 3){ //a-z 0-9 _ 2~30
             this.Errors.username.err = "is-danger";
             this.Errors.username.msg = "this username is unvalide";
             return false;

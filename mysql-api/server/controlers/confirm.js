@@ -4,6 +4,8 @@ exports.confirm = (req, res) => {
     email = req.body.email;
     token = req.body.token;
     //TODO: confirm input first
+    console.log("WAS HERE");
+    try{
     confirmModel.confirmToken(email, token, (err, sqlres) => {
         if (err){
             res.end("SQL ERROR 1");
@@ -33,5 +35,6 @@ exports.confirm = (req, res) => {
             }
         }
     });
+}catch (err) {}
     //res.send('LOL!');
 };

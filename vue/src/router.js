@@ -16,30 +16,53 @@ import Blocked from './views/Blocked';
 import Logout from "./views/logout";
 import Mutuallikes from './views/Mutuallikes';
 import Guests from './views/Guests';
-Vue.use(Router)
+import Browse from './views/Browse';
+import Search from './views/Search';
+import Youlike from './views/Youlike';
+import Likeyou from './views/Likeyou';
+import Reset from './views/Reset';
+import notification from './views/notification';
+import notFound from './views/404.vue';
+Vue.use(Router,{})
 
-export default new Router({
+const router = new Router({
   mode: 'history',
   routes: [
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      meta: {title: 'Home'}
     },
     {
       path: '/signup',
       name: 'signup',
-      component: Signup
+      component: Signup,
+      meta: {title: 'Singup'}
     },
     {
       path: '/login',
       name: 'login',
-      component: Login
+      component: Login,
+      meta: {title: 'Login'}
     },
     {
       path: '/logout',
       name: 'logout',
       component: Logout
+    },
+    {
+      path: '/reset',
+      name: 'reset',
+      component: Reset,
+      meta: {title: 'Reset'}
+    },
+    {
+      path: '/notification',
+      name: 'notification',
+      component: notification,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'notification'}
     },
     {
       path: '/settings',
@@ -49,61 +72,149 @@ export default new Router({
         {
           path: 'account',
           name: 'account',
-          component: Account
-
+          component: Account,
+          meta: {title: 'Account'}
         }, {
           path: 'profile',
           name: 'profil',
-          component: Profil
+          component: Profil,
+          meta: {title: 'Profil'}
 
         },
         {
           path: 'visite',
           name: 'visite',
-          component: Visite
+          component: Visite,
+          beforeEnter: redirectIfNotCompleteProfil,
+          meta: {title: 'Visites'}
         },
         {
           path: 'blocked',
           name: 'blocked',
-          component: Blocked
+          component: Blocked,
+          beforeEnter: redirectIfNotCompleteProfil,
+          meta: {title: 'Blocked'}
         }
       ]
     }
     , {
       path: '/verify',
       name: 'verify',
-      component: Verify
-
+      component: Verify,
+      meta: {title: 'Verify'}
     },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: Dashboard
+      component: Dashboard,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Dashboard'}
     },
     {
       path: '/profile/:username',
       name: 'profile',
-      component: Profile
+      component: Profile,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Profile'}
     },
     {
       path: '/messages',
       name: 'messages',
-      component: Messages
+      component: Messages,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Messages'}
     },
     {
       path: '/guests',
       name: 'guests',
-      component: Guests
+      component: Guests,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Reset'}
     },
     {
       path: '/mutuallikes',
       name: 'mutuallikes',
-      component: Mutuallikes
+      component: Mutuallikes,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Reset'}
+    },
+    {
+      path: '/youlike',
+      name: 'youlike',
+      component: Youlike,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Youlike'}
+    },
+    {
+      path: '/likeyou',
+      name: 'likeyou',
+      component: Likeyou,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Likeyou'}
+    },
+    {
+      path: '/browse',
+      name: 'browse',
+      component: Browse,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Browse'}
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: Search,
+      beforeEnter: redirectIfNotCompleteProfil,
+      meta: {title: 'Search'}
+    },
+    {
+      path: '/404',
+      name: "404",
+      component: notFound,
+      meta: {title: '404'}
     },
     {
       path: "*",
-      name: "404",
-      component: require("./views/404.vue").default
+      redirect: '404'
     }
   ]
 })
+
+// checking for token if exist before entring route
+router.beforeEach((to, from, next) => {
+  //page title
+  document.title = to.meta.title;
+  var token = localStorage.getItem("token");
+  var paths = ['/login', '/', '/signup', '/logout', '/reset','/verify']
+  if (!token){
+    if (!paths.includes(to.path)){
+      console.log('path:: '+to.path);
+      next('/login');
+    }else next();
+  }
+  else next();
+});
+
+import store from './store';
+function redirectIfNotCompleteProfil (to, from, next) {
+  console.log("Tkhra 3a da7k");
+  if (store.getters) {
+      let userdata = store.getters.getUser;
+      var images = store.getters.getImages;
+      var profil;
+      if(images)
+      images.forEach(element => {
+        if (element.image_type === "PROFIL") {
+          profil = element;
+        }
+      });
+      if(userdata)
+       { if ((!userdata.user_gender || !userdata.user_bio ||!userdata.user_prefer || !profil))
+           next('/settings/profile');
+        next();
+        }
+      }
+      else
+        next('/settings/profile');
+}
+
+export default router;

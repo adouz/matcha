@@ -1,6 +1,7 @@
 <template>
     <div class="texto">
-        <p class="title size has-text-danger has-text-centered is-is-family-code">404</p>
+        <p class="title size has-text-danger has-text-centered is-is-family-code is-hidden-touch">404</p>
+        <p class="title size-mobile has-text-danger has-text-centered is-is-family-code is-hidden-desktop">404</p>
         <p class="title has-text-centered is-is-family-code">Page not found</p>
         <div class="buttons has-addons is-centered">
             <span class="button is-info" @click="goback"><i class="el-icon-back"></i> Go Back</span>
@@ -26,5 +27,8 @@ export default {
 }
 .size {
     font-size: 15rem;
+}
+.size-mobile {
+    font-size: 10rem;
 }
 </style>

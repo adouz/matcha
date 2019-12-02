@@ -203,6 +203,7 @@ Users.remove = function (id, result) {
 
 
 Users.auth = (User, result) => {
+    console.log(User);
     sql.query("SELECT * FROM users WHERE user_name = ?", User.toLowerCase(), (err, res) => {
         if (err) {
             console.log(err);
@@ -212,6 +213,76 @@ Users.auth = (User, result) => {
         }
     });
 }
+
+Users.authID = (Userid, result) => {
+    console.log(Userid);
+    sql.query("SELECT * FROM users WHERE user_id = ?", Userid, (err, res) => {
+        if (err) {
+            console.log(err);
+            result(err, null);
+        } else {
+            result(null, res);
+        }
+    });
+}
+
+
+Users.resetpassword = (email, token, result) => {
+    sql.query('UPDATE users SET user_passwd_token = ? WHERE user_mail = ?', [token, email], (err, res)=>{
+        if (err){
+            console.log(err)
+            result(err, null);
+        }
+        result(null, res);
+    });
+}
+
+Users.verifyRset = (email, token, result) => {
+    sql.query('SELECT * FROM users WHERE user_passwd_token = ? AND user_mail = ?', [token, email], (err, res) => {
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        result(null, res);
+    });
+}
+
+Users.changePassword = (email, token, newpass, result) => {
+    sql.query('UPDATE users SET user_password = ? WHERE user_passwd_token = ? AND user_mail = ?', [newpass,token,email], (err ,res) => {
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        if (res.affectedRows)
+            sql.query('UPDATE users SET user_passwd_token = NULL WHERE user_mail = ?', [email]);
+        result(null, res);
+    });
+}
+
+Users.Addlastconnection = (username, result) =>{
+    sql.query('UPDATE `users`SET `last_connection` = NOW() WHERE `user_name` =  ?', [username], (err, res) => {
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        else
+            result(null, res);
+    });
+}
+
+Users.Getlastconnection = function (username) {
+    return new Promise( (resolve, reject) => {
+         sql.query('SELECT `last_connection` FROM `users` WHERE `user_name` =  ?', [username], (err, res) => {
+            if (err){
+                console.log(err);
+                reject(err);
+            }
+            else
+                resolve(res)
+        });
+    });
+}
+
 /*
 Users.storeToken = (data) => {
     sql.query("INSERT INTO `users_token`(`username`, `token`) VALUES (?,?)", [data.user, data.token], (err, res) => {

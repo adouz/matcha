@@ -1,9 +1,10 @@
 const sql = require('../db/db');
 var jimp = require('jimp');
 const uuidv1 = require('uuid/v1');
-const destination = __dirname +"/../../uploads/";
+const destination = __dirname + "/../../uploads/";
+
 exports.getUserImages = function (user_id, result) {
-    sql.query("Select concat(?,image_path) as 'url',image_id,image_type,image_path from images where user_id=?", ["http://localhost:3000",user_id], function (err, res) {
+    sql.query("Select concat(?,image_path) as 'url',image_id,image_type,image_path from images where user_id=?", ["http://"+host+":3000",user_id], function (err, res) {
         if (err) {
             result(err, null);
         }
@@ -13,53 +14,53 @@ exports.getUserImages = function (user_id, result) {
     });
 };
 
-function createNewImage (image_name,image_type,user_id){
-    return new Promise((resolve,reject) =>
-    {
+
+
+function createNewImage(image_name, image_type, user_id) {
+    return new Promise((resolve, reject) => {
         sql.query("INSERT INTO `images` set image_type = ?, image_path = ? , user_id = ?",
-        [image_type,"/uploads/"+image_name, user_id], function (err, res) {
-            if (err) {
-                console.log("error SQL: ", err);
-                reject(err);
-            }
-            else {
-                console.log(res.insertId);
-                resolve({image_id : res.insertId, image_path : "/uploads/"+image_name, image_type : image_type, url : "http://localhost:3000/uploads/"+image_name});
-            }
-        });
+            [image_type, "/uploads/" + image_name, user_id], function (err, res) {
+                if (err) {
+                    console.log("error SQL: ", err);
+                    reject(err);
+                }
+                else {
+                    console.log(res.insertId);
+                    resolve({ image_id: res.insertId, image_path: "/uploads/" + image_name, image_type: image_type, url: "http://"+host+":3000/uploads/" + image_name });
+                }
+            });
     }
     )
 }
 
 exports.createImage = function (Image, user_id, result) {
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
         var img = Image["image"].split(/data:image\/(?:png|jpeg|bmp|jpg);base64,/);
         const base64str = img[1];
-        var image_name = uuidv1()+".jpeg";
-        var image_path = destination+image_name;
-        var image_type = Image["type"]; 
+        var image_name = uuidv1() + ".jpeg";
+        var image_path = destination + image_name;
+        var image_type = Image["type"];
         const buf = Buffer.from(base64str, 'base64');
         jimp.read(buf, (err, image) => {
             if (err) throw err;
             else {
                 image.write(image_path);
-                createNewImage(image_name,image_type,user_id).then(
+                createNewImage(image_name, image_type, user_id).then(
                     res => {
                         console.log(res);
                         resolve(res);
                     },
-                    err =>{ reject(err)}
+                    err => { reject(err) }
                 )
             }
         })
     })
 };
 
-exports.deleteUserImage = function(user_id,image_id,result)
-{
-    sql.query("delete from images where user_id = ? and image_id = ?", [user_id,image_id], (err, res) => {
+exports.deleteUserImage = function (user_id, image_id, result) {
+    sql.query("delete from images where user_id = ? and image_id = ?", [user_id, image_id], (err, res) => {
         if (!err) {
-                }
-        result(null,res);
+        }
+        result(null, res);
     })
 };

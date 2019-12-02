@@ -15,7 +15,7 @@ const sql = require('../db/db');
 
 exports.matches =  function (username) {
     return new Promise((resolve, reject) => {
-            sql.query("select matched, matcher, room from matches where matched like ? or matcher like ?",[username, username], (err, res) => {
+            sql.query("select distinct matched, matcher, room from matches where matched like ? or matcher like ?",[username, username], (err, res) => {
         if (err) 
             reject(err);
         else 
@@ -23,6 +23,7 @@ exports.matches =  function (username) {
     })
     })
 }
+
 exports.addMessage = (data, result) => {
     sql.query("INSERT INTO `messages` (`from`, `to`, `msg`, `room`, `time`) VALUES (?, ?, ?, ?, NOW())", [data.from, data.to, data.msg, data.room], (err, res) => {
         if (err){
@@ -37,7 +38,7 @@ exports.addMessage = (data, result) => {
 
 exports.getProfilInfo = function (username) {
     return new Promise((resolve, reject) => {
-        sql.query("select concat(? ,image_path) as 'imgurl',TIMESTAMPDIFF(YEAR, user_birthdate, CURDATE()) AS user_age,user_bio,user_popularity,user_addresse,user_gender,user_fullname from images,users where image_type like 'PROFIL' and images.user_id=users.user_id and user_name like ?", ["http://localhost:3000",username], function (err, info) {
+        sql.query("select concat(? ,image_path) as 'imgurl',TIMESTAMPDIFF(YEAR, user_birthdate, CURDATE()) AS user_age,user_bio,user_popularity,user_addresse,user_gender,user_fullname from images,users where image_type like 'PROFIL' and images.user_id=users.user_id and user_name like ?", ["http://"+host+":3000",username], function (err, info) {
         if (err) 
             reject(err);
         else

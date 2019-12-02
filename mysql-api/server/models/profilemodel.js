@@ -16,13 +16,14 @@ exports.liked = (likeruser, likeduser, result) => {
     //check if already liked
     isAlreadyLiked(likeruser, likeduser).then(
         (res) => {
-            if (!res[0])
+            if (res.length === 0)
                 sql.query('INSERT INTO likes (liker_user, liked_user, time) VALUES(?,?, NOW())', [likeruser, likeduser], (err, res) => {
                     console.log('new like');
                     if (err) {
                         console.log(err);
                         result(err, null);
                     }
+                    sql.query('UPDATE users SET user_popularity = user_popularity + 4 WHERE user_name = ?', [likeduser]);
                     console.log(res);
                     result(null, res);
                 });
@@ -61,7 +62,7 @@ exports.isMatch = (likeduser, likeruser, result) => {
     isLikedBack(likeduser, likeruser).then(
         res => {
             //its a match if user liked back
-            if (res[0]) {
+            if (res.length !== 0) {
                 console.log('its a match');
                 sql.query('INSERT INTO `matches` ( `matcher`, `matched`, `room`, `time`)VALUES(?, ?, UUID(), NOW())', [likeduser, likeruser], (err, res) => {
                     if (err)
@@ -99,6 +100,7 @@ exports.unliked = (unlikeruser, unlikeduser, result) => {
             result(err, null);
         } else {
             console.log('unliked:: ', res);
+            sql.query('UPDATE users SET user_popularity = user_popularity - 4 WHERE user_name = ?', [unlikeduser]);
             if (res.affectedRows) {
                 console.log('delete room and messages');
                 DeleteRoomAndMessages(unlikeruser, unlikeduser).then(
@@ -117,14 +119,13 @@ exports.unliked = (unlikeruser, unlikeduser, result) => {
 
 function isBlocked(blockeRuser,blockeDuser) {
  return new Promise((resolve, reject) => {
-     sql.query('SELECT * FROM `blockes` WHERE blocker_user = ? AND blocked_user = ?', [blockeRuser, blockeDuser], (err, res) => {
+     sql.query('SELECT * FROM `blocks` WHERE blocker_user = ? AND blocked_user = ?', [blockeRuser, blockeDuser], (err, res) => {
         if (err)
             reject(err);
         resolve(res);
      });
  });
 }
-
 
 function DeleteAll(blocker, blocked) {
     sql.query('DELETE FROM matches WHERE (matcher like ? AND matched like ?) OR (matcher like ? AND matched like ?)', [blocker, blocked, blocked, blocker]);
@@ -135,8 +136,9 @@ function DeleteAll(blocker, blocked) {
 exports.block = (blockeRuser,blockeDuser, result) => {
     isBlocked(blockeRuser,blockeDuser).then(
         resp => {
-            if (!resp[0]){
-                sql.query('INSERT INTO `blockes` (blocker_user, blocked_user, time) VALUES(?,?,NOW())', [blockeRuser,blockeDuser], (err, res) => {
+            console.log(resp[0],"bla zero",resp);
+            if (resp.length === 0){
+                sql.query('INSERT INTO `blocks` (blocker_user, blocked_user, time) VALUES(?,?,NOW())', [blockeRuser,blockeDuser], (err, res) => {
                     if (err){
                         console.log(err);
                         result(err, null);
@@ -155,7 +157,7 @@ exports.block = (blockeRuser,blockeDuser, result) => {
 }
 
 exports.getBolcks = (username, result) => {
-    sql.query('SELECT * FROM `blockes` WHERE blocker_user = ? OR blocked_user = ?', [username, username], (err, res) => {
+    sql.query('SELECT * FROM `blocks` WHERE blocker_user = ? OR blocked_user = ?', [username, username], (err, res) => {
         if (err){
             console.log(err);
             result(err, null);
@@ -164,6 +166,32 @@ exports.getBolcks = (username, result) => {
     });
 }
 
-exports.report = () => {
+exports.blockedUsers = (username, result) => {
+    sql.query('SELECT `blocks`.*, `users`.`user_id`, `users`.`user_fullname`,TIMESTAMPDIFF(YEAR, users.user_birthdate, CURDATE()) AS user_age,TIMESTAMPDIFF(DAY, blocks.time, CURDATE()) AS block_days, concat(?,`images`.image_path) AS image FROM `blocks`, `users`, `images` WHERE blocker_user = ? AND `user_name` = blocked_user AND `users`.`user_id` = `images`.`user_id` AND image_type = "PROFIL"', ["http://"+host+":3000",username], (err, res) => {
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        result(null, res);
+    });
+}
 
+exports.report = (ReporteRuser, ReportDuser, result) => {
+    sql.query('INSERT INTO `reports` (`reporter`, `reported`,`time`) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE time = NOW()', [ReporteRuser, ReportDuser], (err, res)=> {
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        result(null, res);
+    });
+}
+
+exports.unblock = (username, unblocked, result) => {
+    sql.query('DELETE FROM `blocks` WHERE blocker_user = ? AND blocked_user = ?', [username, unblocked], (err,res) =>{
+        if (err){
+            console.log(err);
+            result(err, null);
+        }
+        result(null, res);
+    });
 }

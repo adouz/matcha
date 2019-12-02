@@ -13,21 +13,31 @@
               <div class="media">
                 <div class="media-left">
                   <!-- PROFILE IMAGE -->
-                  <figure class="image is-48x48">
-                    <img
-                      :src="u.url ? u.url : 'https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png'"
-                      alt="Placeholder image"
-                      class="rounded"
-                    >
-                  </figure>
+                  <el-tooltip
+                    class="item"
+                    effect="dark"
+                    content="Visit this profil"
+                    placement="left"
+                  >
+                    <a :href="'/profile/' + u.username">
+                      <figure class="image is-48x48">
+                        <img
+                          :src="u.url ? u.url : 'https://cdn.business2community.com/wp-content/uploads/2017/08/blank-profile-picture-973460_640.png'"
+                          alt="Placeholder image"
+                          class="rounded"
+                        >
+                      </figure>
+                    </a>
+                  </el-tooltip>
                 </div>
                 <div class="media-content">
                   <p class="title is-4">
-                    <a :href="'/profile/' + u.username">
+                    <!-- <a :href="'/profile/' + u.username">
+                    {{u.username}}</a>-->
+                    <span class="fullname">
                       {{u.username}}
-                      <i class="el-icon-link"></i>
-                      <!-- ONLINE STATUS -->
                       <el-tooltip
+                        v-if="!u.lastconnnection"
                         class="item"
                         effect="dark"
                         :content="u.isOnline"
@@ -35,9 +45,14 @@
                       >
                         <span :class="u.isOnline"></span>
                       </el-tooltip>
-                    </a>
+                      <el-tooltip v-else class="item" effect="dark" :content="'offline: '+u.lastconnnection" placement="left">
+                        <span :class="u.isOnline"></span>
+                      </el-tooltip>
+                    </span>
+                    <!-- <i class="el-icon-link"></i> -->
+                    <!-- ONLINE STATUS -->
                   </p>
-                  <p class="subtitle is-6">...</p>
+                  <p class="subtitle is-6">{{u.isOnline}}</p>
                 </div>
               </div>
             </div>
@@ -76,7 +91,7 @@
             <p v-if="room && typing">{{typing}} is typing...</p>
           </div>
           <picker v-if="showEmo" :data="emojiIndex" class="EmojiPicker" @select="addEmoji"/>
-          <div class="controls field has-addons">
+          <div v-if="room" class="controls field has-addons">
             <div class="control" @click="showEmo = !showEmo">
               <a class="button is-info">
                 <i class="el-icon-star-on"></i>
@@ -86,7 +101,7 @@
               <input
                 class="input"
                 type="text"
-                placeholder="Find a repository"
+                placeholder="write something here"
                 v-model="newMessage"
                 @keyup.enter="send()"
               >
@@ -108,7 +123,8 @@ import data from "../data/all.json";
 import { Picker, EmojiIndex } from "emoji-mart-vue-fast";
 import "emoji-mart-vue-fast/css/emoji-mart.css";
 import io from "socket.io-client";
-var socket = io("localhost:3000/messages");
+import moment from 'moment'
+var socket = io.connect(":3000/messages",{query: 'token='+localStorage.getItem("token")});
 
 export default {
   components: {
@@ -134,26 +150,23 @@ export default {
       return this.$store.getters.getUser;
     }
   },
-  beforeRouteEnter(to, from, next) {
-    socket.connect();
-    next();
-  },
   beforeRouteLeave(to, from, next) {
-    socket.disconnect();
+    let users = this.users;
+    users.forEach(user => {
+      this.sockets.unsubscribe("isOnline" + user.username);
+    });
     next();
   },
   mounted() {
     this.$http
       .get("matches/" + this.user.user_name)
       .then(res => {
-        if (res.data.message === "Failed to authenticate token.")
-          this.$router.push({ path: "/login" });
         if (res.data.data) {
           this.users = res.data.data;
-          console.log(res.data.data);
+          console.log(this.users);
           // Online emit
           this.users.forEach(user => {
-            this.$socket.emit("Online", user.username);
+            this.$socket.emit("Online", {username: user.username});
           });
         }
         this.loading = false;
@@ -161,7 +174,6 @@ export default {
       .catch(err => {
         console.error(err);
       });
-
     socket.on("message from room", data => {
       console.log("message from room ::", data);
       this.messages = [...this.messages, data];
@@ -179,14 +191,25 @@ export default {
     socket.on("stopTyping", data => {
       if (data != this.user.user_name) this.typing = false;
     });
+    this.$socket.on('deleteroom',(data) => {
+      this.users.forEach((elm, i) => {
+        console.log(elm);
+        if (elm.username === data.blocked || elm.username === data.blocker){
+          console.log('delete '+elm.username);
+          this.room = null;
+          this.users.splice(i,1);
+        }
+      });
+    });
   },
   watch: {
     newMessage(val) {
       val
-        ? socket.emit("typing", { from: this.user.user_name, room: this.room })
+        ? socket.emit("typing", { from: this.user.user_name, room: this.room, token:localStorage.getItem("token") })
         : socket.emit("stopTyping", {
             from: this.user.user_name,
-            room: this.room
+            room: this.room,
+            token:localStorage.getItem("token")
           });
     },
     sendto(val) {
@@ -199,9 +222,14 @@ export default {
     onlinesocket() {
       let users = this.users;
       users.forEach(user => {
-        this.$socket.on("isOnline" + user.username, data => {
-          if (data) user.isOnline = "online";
-          else user.isOnline = "offline";
+        this.sockets.subscribe("isOnline" + user.username, data => {
+          if (data.online){
+            user.lastconnnection = '';
+            user.isOnline = "online";
+          }else{
+            user.isOnline = "offline";
+            user.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
+          }  
         });
       });
     },
@@ -213,12 +241,13 @@ export default {
       this.showEmo = false;
     },
     send() {
-      if (!this.room || !this.newMessage) return;
+      if (!this.room || !this.newMessage || !this.newMessage.trim()) return;
       socket.emit("room message", {
         room: this.room,
         from: this.user.user_name,
         to: this.sendto,
-        msg: this.newMessage
+        msg: this.newMessage,
+        token:localStorage.getItem("token")
       });
       this.newMessage = "";
     },
@@ -227,9 +256,6 @@ export default {
         this.$http
           .get("/messages/" + room)
           .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
-
             var data = res.data;
             reslove(data);
           })
@@ -237,15 +263,15 @@ export default {
       });
     },
     clickeduser(i) {
-      this.room = this.users[i].room;
       this.chatloading = true;
+      this.room = this.users[i].room;
       let roomMessages = this.getMessages(this.room);
       roomMessages.then(
         data => (this.messages = data),
         err => console.log(err)
       );
       this.chatloading = false;
-      socket.emit("joinroom", this.users[i].room);
+      socket.emit("joinroom", {room: this.users[i].room, token:localStorage.getItem("token")});
       this.users[i].selected = true;
       this.users.forEach(function(user, index) {
         if (index !== i) {
@@ -281,7 +307,13 @@ export default {
 /*::-webkit-scrollbar { 
     display: none; 
 }*/
+.columns {
+  height: 600px;
+  max-height: 600px;
+}
+
 .box {
+  height: 600px;
   background-image: url("https://www.fakechatapp.com/app/pics/bg-whatsapp.png");
 }
 .messages {
@@ -308,7 +340,6 @@ export default {
   max-height: 600px;
 }
 .users .box {
-  height: 600px;
   overflow-y: scroll;
   padding: 5px;
 }
@@ -336,5 +367,52 @@ export default {
   border-radius: 50%;
   width: 50px;
   height: 50px;
+}
+.fullname {
+  font-size: 1.2rem;
+  align-items: center;
+  text-align: left;
+  margin-top: 2px;
+  line-height: 1;
+  font-weight: bold;
+  color: #7957d5;
+}
+
+@media screen and (max-width: 768px) {
+  .users {
+    overflow-y: scroll;
+    max-height: 140px;
+  }
+  .box {
+    height: fit-content;
+    max-height: 320px;
+    padding:none;
+  }
+  .messages {
+    padding: 5px;
+    height: 210px;
+  }
+  .media {
+    padding: 0;
+    height: 15px;
+  }
+  .fullname {
+    font-size: 1rem;
+  }
+  .card-content {
+    padding-top: 0.1rem;
+    padding-right: 1.5rem;
+    padding-bottom: 2.4rem;
+    padding-left: 1.5rem;
+    border-radius: 0.5rem;
+  }
+  .card{
+    border-radius: 0.5rem;
+  }
+  .no-matches {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 20px;
+} 
 }
 </style>

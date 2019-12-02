@@ -7,8 +7,21 @@ exports.blockMidllware = (req, res, next) => {
             res.end();
         else{
             if (sqlres[0]){
-                console.log(sqlres[0]);
-                res.end();
+                var arr = {
+                    blocked: [],
+                    blockedme: [] 
+                };
+                sqlres.forEach(element => {
+                    if (element.blocked_user !== username){
+                        arr.blockedme.push(element.blocked_user);
+                    }
+                    else if (element.blocker_user !== username){
+                        arr.blocked.push(element.blocker_user);
+                    }
+                });
+                req.blocked = arr;
+                next();
+                //res.end('block');
             }else
                 next();
             // req.block = sqlres;

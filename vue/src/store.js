@@ -2,10 +2,9 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import axios from 'axios'
 import createPersistedState from 'vuex-persistedstate';
-
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
     state: {
         status: '',
         data: {}
@@ -15,57 +14,59 @@ export default new Vuex.Store({
         // LOGIN(state, user){
         //     state.data = user;
         // },
-        request(state){
+        request(state) {
             state.status = 'loading'
         },
-        success(state, data){
+        success(state, data) {
             state.status = 'success'
             state.data = data
         },
-        error(state){
+        error(state) {
             state.status = 'error'
         },
-        logout(state){
+        logout(state) {
             state.status = ''
             state.data = {}
         },
-        update(state, data){
+        update(state, data) {
             state.status = 'success'
             state.data = data;
         }
     },
     actions: {
         login({ commit }, user) {
-            return new Promise((resolve, reject) => {
+            return new Promise(async (resolve, reject) => {
+                console.log('%c commit for ' + user.user + ' data', 'background: #222; color: #bada55');
                 commit('request')
-                axios.get('http://localhost:3000/userdata/'+user.user, {
-                    params: {
-                        token: user.token
-                      }
-                }).then(
+                await Vue.prototype.$http.get('/userdata/' + user.user).then(
                     res => {
-                        if(res.data.success){
+                        if (res.data.success) {
                             const data = res.data.data;
                             commit('success', data)
                             console.log('new data:');
                             console.log(data);
                             resolve(res.data)
-                        }else{
-                            commit('error')
-                            localStorage.removeItem('token')
-                            reject("API ERROR:",res.data)
+                        } else {
+                            console.log('%c we have error here 0', 'background: red; color: #bada55');
+                            if (res.data.message === "No token Provided." || res.data.message === "Failed to authenticate token.") {
+                                localStorage.removeItem('token')
+                                reject("token error");
+                            } else {
+                                commit('error')
+                                reject("store:: UNKONWN API ERROR")
+                            }
                         }
                     }
-                ).catch( err => {
+                ).catch(err => {
+                    console.log('%c we have error here 1', 'background: red; color: #bada55');
                     commit('error')
                     localStorage.removeItem('token')
                     reject(err)
-                    }
+                }
                 )
             })
-            //commit('LOGIN', user)
         },
-        logout({ commit }){
+        logout({ commit }) {
             return new Promise((resolve) => {
                 commit('logout')
                 localStorage.removeItem('token')
@@ -73,27 +74,27 @@ export default new Vuex.Store({
                 resolve()
             })
         },
-        update({commit},user){
+        update({ commit }, user) {
             return new Promise((resolve) => {
-                commit('update',user)
+                commit('update', user)
                 resolve()
             })
         }
     },
     getters: {
-        getUser: state => {
+        getUser: (state) => {
             return state.data.user;
         },
-        getImages: state => {
+        getImages: (state) => {
             return state.data.images;
         },
-        getTags: state => {
+        getTags: (state) => {
             return state.data.tags;
         },
-        getLikes: state => {
+        getLikes: (state) => {
             return state.data.likes;
         }
+
     }
-  })
-  
-  // this.$store.getters.getUser;
+})
+export default store;

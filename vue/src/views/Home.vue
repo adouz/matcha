@@ -27,9 +27,16 @@ export default {
   components: {
     
   },mounted(){
-        if (localStorage.token)
-            this.$router.push({ path: '/dashboard'});
+      if (localStorage.token)
+        this.$router.push({ path: '/dashboard'});
     }
 }
 </script>
+
+<style>
+#content{
+  background-image: linear-gradient(#fafafa, #c9ffe0, #fafafa);
+}
+</style>
+
 

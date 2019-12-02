@@ -1,54 +1,56 @@
 const Tags = require('../models/tagsmodel.js');
 
 
-exports.list_all_tags = function(req, res) {
-    Tags.getAllTags(function(err, tags) {
-    if (err)
-      return res.send(err);
-      //console.log('res', tags);
-      /*const test = [];
-      tags.map(cur => test.push({"text" : cur.text}))*/
-    res.send(tags);
-  });
+exports.list_all_tags = function (req,res) {
+  try {
+    Tags.getAllTags().then((tags) => {
+        res.json(tags);
+      }
+    ).catch(
+      (err)=>{
+         res.json(err);
+      }
+    )
+  } catch (err) {console.log(err)}
 };
-
-exports.list_user_tags = function(req, res) {
-  Tags.getUserTags(req.params.userId,function(err, tags) {
-  if (err)
-    return res.send(err);
-  
-    //console.log('res', tags);
-    /*const test = [];
-    tags.map(cur => test.push({"text" : cur.text}))*/
-  res.send(tags);
-});
+function validate_tag(tag) {
+  if (!tag.text.match(/.*\S.*/))
+      return false;
+  return true;
+}
+/*exports.list_user_tags = function (req, res) {
+  try {
+    Tags.getUserTags(req.jwt.userId, function (err, tags) {
+      if (err)
+        return res.send(err);
+      else
+        res.send(tags);
+    });
+  } catch (err) { }
 };
-
-exports.create_a_tag = function(req, res) {
+*/
+exports.create_a_tag = function (req, res) {
+  console.log(req.body);
   var tags = req.body.newtags;
   var selectedtags = req.body.selectedtags;
   var user_id = req.body.user_id;
-  
-   /*if(!new_user.user_name)
-      res.status(400).send({ error:true, message: 'Please provide User/status' });*/
-  //   var errors = is_valid_user(new_user);
-    //if (Object.keys(errors).length != 0)
-     // res.json(errors);
-    //else 
-    for(tag in tags){
-      Tags.createTag(tags[tag], function(err, ressql) {
-        if (err)
-        res.send(err);
-       // res.json(res);
-  });
-  }
-  /* ASSign TAGS TO USER*/
-  for(tag in selectedtags)
-  {
-    Tags.AssignTag(selectedtags[tag],user_id, function(err, ressql) {
+  for (tag in tags) {
+    if (!validate_tag(tags[tag]))
+      continue;
+    Tags.createTag(tags[tag], (err) => {
       if (err)
-      res.send(err);
-     // res.json(res);
-});
-}
+        res.end({ err: err.msg });
+    })
+  }
+  Tags.deleteTags(user_id, (err) => {
+    if (err)
+      res.end({ err: err.msg });
+  })
+  for (tag in selectedtags) {
+    Tags.AssignTag(selectedtags[tag], user_id, (err) => {
+      if (err)
+        res.end({ err: err.msg });
+    })
+  }
+  res.json({ ok: true });
 };

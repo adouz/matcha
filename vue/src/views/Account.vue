@@ -8,28 +8,19 @@
             <h5>Settings</h5>
           </center>
           <el-menu default-active="1">
-              <router-link class="link" to="profile">
-            <el-menu-item index="0">
-              <i class="el-icon-user-solid"></i>
-                Profil
-            </el-menu-item>
-                </router-link>
+            <router-link class="link" to="profile">
+              <el-menu-item index="0">
+                <b-icon icon="user-alt"></b-icon>Profil
+              </el-menu-item>
+            </router-link>
             <el-menu-item index="1">
-              <i class="el-icon-s-tools"></i>
-              <span>Account</span>
+              <b-icon icon="user-shield"></b-icon>Account
             </el-menu-item>
-              <router-link class="link" to="visite">
-            <el-menu-item index="2">
-              <i class="el-icon-view"></i>
-                Visite
-            </el-menu-item>
-                </router-link>
-              <router-link class="link" to="blocked">
-            <el-menu-item index="3">
-              <i class="el-icon-error"></i>
-                Blocked
-            </el-menu-item>
-                </router-link>
+            <router-link class="link" to="blocked">
+              <el-menu-item index="2">
+                <b-icon icon="eye-slash"></b-icon>Blocked
+              </el-menu-item>
+            </router-link>
           </el-menu>
           <!-- end -->
         </div>
@@ -45,7 +36,7 @@
                 :type="Errors.username.err"
                 :message="Errors.username.msg"
               >
-                <b-input v-model="this.user.user_name"></b-input>
+                <b-input v-model="user_name"></b-input>
               </b-field>
               <br>
               <b-field
@@ -54,32 +45,43 @@
                 :type="Errors.email.err"
                 :message="Errors.email.msg"
               >
-                <b-input type="email" v-model="user.user_mail" maxlength="30"></b-input>
+                <b-input type="email" v-model="user_mail" maxlength="30"></b-input>
               </b-field>
               <b-field grouped>
                 <b-field
-                  label="Password"
+                  label="New Password"
                   expanded
                   :label-position="labelPosition"
-                  :type="Errors.password.err"
-                  :message="Errors.password.msg"
+                  :type="Errors.passwordfield.err"
+                  :message="Errors.passwordfield.msg"
                 >
-                  <b-input type="password" v-model="password" expanded maxlength="30"></b-input>
+                  <b-input type="password" v-model="passwordfield" expanded maxlength="30" autocomplete="new-password" password-reveal></b-input>
                 </b-field>
                 <b-field
                   label="Confirm Password"
                   expanded
                   :label-position="labelPosition"
-                  :type="Errors.confirmpassword.err"
-                  :message="Errors.confirmpassword.msg"
+                  :type="Errors.confirmpasswordfield.err"
+                  :message="Errors.confirmpasswordfield.msg"
                 >
-                  <b-input type="password" v-model="confirmpassword" expanded maxlength="30"></b-input>
+                  <b-input type="password" v-model="confirmpasswordfield" expanded maxlength="30" autocomplete="new-password" password-reveal></b-input>
                 </b-field>
               </b-field>
             </section>
+            <b-field
+                  label="Password"
+                  expanded
+                  :label-position="labelPosition"
+                  :type="Errors.oldPassword.err"
+                  :message="Errors.oldPassword.msg"
+                >
+                  <b-input type="password" v-model="oldPassword" expanded maxlength="30"  autocomplete="new-password" password-reveal></b-input>
+                </b-field>
             <b-message v-if="err" type="is-danger">
-              YOU HAVE AN ERROR PLEASE TRY AGAIN!
-              <br>OR RELOAD PAGE!
+              SOMTHING WENT WRONG MAYBE YOU ENTRED A WRONG PASSWORD!
+            </b-message>
+            <b-message v-if="confirm" type="is-success">
+              YOUR CHANGES ARE SUCCESSFULLY DONE!
             </b-message>
             <div class="level-right">
               <button type="submit" class="button is-success">Submit</button>
@@ -92,18 +94,17 @@
 </template>
 
 <script>
-import axios from "axios";
-
-axios.defaults.baseURL = "http://10.11.2.12:3000/";
 
 export default {
   name: "Account",
   data() {
     return {
-      user: [],
+      user_name: "user",
+      user_mail: "",
       labelPosition: "on-border",
-      password: "",
-      confirmpassword: "",
+      passwordfield: "",
+      oldPassword: "",
+      confirmpasswordfield: "",
       err: false,
       confirm: false,
       Errors: {
@@ -115,68 +116,113 @@ export default {
           err: null,
           msg: null
         },
-        password: {
+        passwordfield: {
           err: null,
           msg: null
         },
-        confirmpassword: {
+        confirmpasswordfield: {
+          err: null,
+          msg: null
+        },
+        oldPassword: {
           err: null,
           msg: null
         }
       }
     };
   },
-  beforeRouteLeave (to, from, next) {
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", {user: this.userdata.user_name,token: token})
-    next();
-  },
-  created(){
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", {user: this.userdata.user_name,token: token})
-    console.log('updating DATA');
+  // beforeRouteLeave(to, from, next) {
+  //   this.$store
+  //     .dispatch("login", { user: this.user_name})
+  //     .then(() => {
+  //       next();
+  //     })
+  //     .catch(err => {
+  //       console.log(err);
+  //     });
+  // },
+  created() {
+    this.loadProfil();
+    // this.$store
+    //   .dispatch("login", { user: this.userdata.user_name })
+    //   .then(() => {
+    //         this.loadProfil();
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   });
+    // console.log("updating DATA");
   },
   computed: {
-    userdata: function () {
+    userdata: function() {
       return this.$store.getters.getUser;
     }
   },
-  mounted() {
-    if (!localStorage.token) this.$router.push({ path: "/login" });
-      this.user = this.$store.getters.getUser;
-    console.log(this.user);
-  },
+  // mounted() {
+  //   console.log(this.user);
+  // },
   methods: {
+    loadProfil() {
+      this.user_name = this.userdata.user_name;
+      this.user_mail= this.userdata.user_mail;
+    },
     UpdateAccount() {
-      if (this.validate(this.password !== "")) {
+      if (this.validate(this.passwordfield !== "")) {
         var user = {};
-        if (this.password)
+        if (this.passwordfield)
           user = {
-            user_name: this.user.user_name.toLowerCase(),
-            user_mail: this.user.user_mail,
-            user_password: this.password
+            user_name: this.user_name,
+            user_mail: this.user_mail,
+            user_password: this.passwordfield,
+            user_oldpassword: this.oldPassword
           };
         else
           user = {
-            user_name: this.user.user_name,
-            user_mail: this.user.user_mail
+            user_name: this.user_name,
+            user_mail: this.user_mail,
+            user_oldpassword: this.oldPassword
           };
-
+        console.log(user);
         this.$http
-          .put("users/" + this.user.user_id, user)
+          .put("usersaccount/", user)
           .then(res => {
             if (!res.data.success) {
               this.err = true;
+              this.confirm = false;
             } else {
-              this.confirm = true;
+              this.user_name = res.data.username;
+              //this.confirm = true;
+              console.log(this.userdata.username);
+              if(res.data.token)
+              {
+                // change token
+                localStorage.setItem("token", res.data.token);
+                console.log('dispatch::::');
+                //change data
+                this.$store
+                .dispatch("login", {user: this.user_name})
+                .then(() => {
+                  this.confirm = true;
+                  this.err = false;
+                })
+                .catch(err => {
+                  console.log(err);
+                });
+              }else{
+                //username already taken
+                console.log(res.data.reason);
+              }
             }
-            this.$store.dispatch("update", this.user);
+            //delete this.user.oldPassword;
+            //this.$store.dispatch("update", this.user);
           })
-          .catch(err => console.error(err));
+          .catch(err => {
+            console.error(err)
+            });
       }
     },
-    validate(password) {
-      if (!this.user.user_name.match(/^[a-z0-9_]{2,30}$/g)) {
+    validate(passwordfield) {
+      if (!this.user_name.match(/^[a-z]+([_-]?[a-z0-9])*$/g)|| this.user_name.length > 30 || this.user_name.length < 3) {
         //a-z 0-9 _ 2~30
         this.Errors.username.err = "is-danger";
         this.Errors.username.msg = "this username is unvalide";
@@ -187,7 +233,7 @@ export default {
       }
 
       if (
-        !this.user.user_mail.match(
+        !this.user_mail.match(
           /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/gi
         )
       ) {
@@ -198,41 +244,52 @@ export default {
         this.Errors.email.err = "is-success";
         this.Errors.email.msg = "";
       }
-      if (password === true) {
-        if (
-          !this.password.match(
+
+      if (
+          !this.oldPassword.match(
             /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
           )
         ) {
-          this.Errors.password.err = "is-danger";
-          this.Errors.password.msg = "your password is not strong";
+          this.Errors.oldPassword.err = "is-danger";
+          this.Errors.oldPassword.msg = "your password is wrong";
           return false;
         } else {
-          this.Errors.password.err = "is-success";
-          this.Errors.password.msg = "";
+          this.Errors.oldPassword.err = "is-success";
+          this.Errors.oldPassword.msg = "";
+        }
+      if (passwordfield === true) {
+        if (
+          !this.passwordfield.match(
+            /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
+          )
+        ) {
+          this.Errors.passwordfield.err = "is-danger";
+          this.Errors.passwordfield.msg = "your password is not strong";
+          return false;
+        } else {
+          this.Errors.passwordfield.err = "is-success";
+          this.Errors.passwordfield.msg = "";
         }
 
         if (
-          !this.confirmpassword.match(
+          !this.confirmpasswordfield.match(
             /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
           ) ||
-          !this.confirmpassword.match(this.password)
+          !this.confirmpasswordfield.match(this.password)
         ) {
-          this.Errors.confirmpassword.err = "is-danger";
-          this.Errors.confirmpassword.msg = "your passwords dosn't match";
+          this.Errors.confirmpasswordfield.err = "is-danger";
+          this.Errors.confirmpasswordfield.msg = "your passwords dosn't match";
           return false;
         } else {
-          this.Errors.confirmpassword.err = "is-success";
-          this.Errors.confirmpassword.msg = "";
+          this.Errors.confirmpasswordfield.err = "is-success";
+          this.Errors.confirmpasswordfield.msg = "";
         }
+      } else {
+        this.Errors.passwordfield.err = "";
+        this.Errors.passwordfield.msg = "";
+        this.Errors.confirmpasswordfield.err = "";
+        this.Errors.confirmpasswordfield.msg = "";
       }
-      else
-        {
-          this.Errors.password.err = "";
-          this.Errors.password.msg = "";
-          this.Errors.confirmpassword.err = "";
-          this.Errors.confirmpassword.msg = "";
-        }
       return true;
     }
   }

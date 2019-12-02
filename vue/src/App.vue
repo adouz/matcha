@@ -8,7 +8,6 @@
     <Footer/>
   </div>
 </template>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAlhMoDvlSEwV0Q87e2hNvmezSHxAksdu0"></script>
 <script>
 import Navbar from "./components/Navbar";
 import LogedNavbar from "./components/LogedNavbar";
@@ -18,7 +17,7 @@ export default {
   data() {
     return {
       err: false,
-      pages1: ["login", "signup", "home", "verify"],
+      pages1: ["login", "signup", "home", "verify", "reset"],
       pages2: [
         "settings",
         "dashboard",
@@ -29,7 +28,12 @@ export default {
         "visite",
         "blocked",
         "mutuallikes",
-        "guests"
+        "guests",
+        "browse",
+        "search",
+        "youlike",
+        "likeyou",
+        "notification"
       ]
     };
   },
@@ -37,6 +41,12 @@ export default {
     Navbar,
     LogedNavbar,
     Footer
+  },
+  sockets:{
+    notification: function (data) {
+      console.log('i got notification on APP.vue');
+      this.notifyUser(data);
+    }
   },
   computed: {
     username: function() {
@@ -47,16 +57,16 @@ export default {
     // console.log('%cMOVE ALONG! NOTHING TO SEE HERE', 'font-size: 40px; color: blue');
     // console.log('%c ', 'font-size:800px; background:url(https://s5.gifyu.com/images/tenor.gif) no-repeat;');
 
-
     //this.$socket.emit("new user", this.username);
-    this.$socket.on("notification", data => {
-      this.notifyUser(data);
-    });
+    // this.$socket.on("notification", data => {
+    //   console.log('i got notification on APP.vue');
+    //   this.notifyUser(data);
+    // });
   },
   methods: {
     notifyUser(data) {
-      this.$notify({
-        title: data.title,
+        this.$notify({
+          title: data.title,
         message: data.msg,
         position: "bottom-right"
       });
@@ -66,10 +76,10 @@ export default {
 </script>
 
 <style>
+
 #navbar {
   /*margin-top: 20px;*/
   margin-bottom: 20px;
-  background-color: #fafafa;
 }
 @media screen and (min-width: 1268px) {
   #navbar,

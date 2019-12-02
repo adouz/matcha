@@ -7,151 +7,204 @@ STMP Configuration
 **/
 var stmp = nodemailer.createTransport({
   service: 'Gmail',
-  auth:{
+  auth: {
     user: "42matcha1337",
     pass: "@42matcha1337@"
   }
 });
 
-function send_mail(mail, link) {
-  mailOptions={
+function send_mail(mail, sbj, msg) {
+  mailOptions = {
     to: mail,
-    subject: "Matcha | Confirm Your E-mail",
-    html: "Please click link below to verify your E-mail:</br><a href=\""+link+"\">Click Here</a><br>Or Open this link on your browser:<br>"+link
+    subject: sbj,
+    html: msg
   }
   stmp.sendMail(mailOptions, (err, res) => {
-    if(err){
+    if (err) {
       console.log("stmp.sendMail Error:", err);
-      return("error");
-    }else{
-      return("sent");
+      return ("error");
+    } else {
+      return ("sent");
     }
   });
 }
 
-function is_valid_user(users)
-{
+function is_valid_user(users) {
   //console.log(users);
   const errors = {};
   if (users.user_name && users.user_fullname && users.user_birthdate /*&&
-    users.user_gender*/ && users.user_password && users.user_mail ){
-	//user_name check
-	if (!users.user_name.match(/^[a-z0-9_]{2,30}$/g))
-    errors.user_name = ['Name is required'];
-  //fullname check
-  if(!users.user_fullname.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g))
-    errors.user_fullname = ['Fullname is required'];
-  //check birthdate
-  var date = new Date(users.user_birthdate);
-  if (date.getDate() !== NaN || date.getMonth() !== NaN || date.getFullYear() !== NaN)
-  {
-    let age = moment().diff(date, 'years');
-  if (age < 18)
-    errors.user_birthdate = ['You have to be more than 18'];}
-//check gender
-  /*if(!users.user_gender.match(/^\b[FM]{1}\b/g))
-    errors.user_gender = ['You most be a man or a women, surely your not something else'];*/
-//check password
-if(!users.user_password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g))
-    errors.user_password = ['Invalid password'];
-//check mail
-	if (!users.user_mail.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/))
-    errors.user_mail = ['Email is not valid.'];
+    users.user_gender*/ && users.user_password && users.user_mail) {
+    //user_name check
+    if (!users.user_name.match(/^[a-z]+([_-]?[a-z0-9])*$/g))
+      errors.user_name = ['Name is required'];
+    //fullname check
+    if (!users.user_fullname.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g))
+      errors.user_fullname = ['Fullname is required'];
+    //check birthdate
+    var date = new Date(users.user_birthdate);
+    if (date.getDate() !== NaN || date.getMonth() !== NaN || date.getFullYear() !== NaN) {
+      let age = moment().diff(date, 'years');
+      if (age < 18)
+        errors.user_birthdate = ['You have to be more than 18'];
+    }
+    //check password
+    if (!users.user_password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g))
+      errors.user_password = ['Invalid password'];
+    //check mail
+    if (!users.user_mail.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/))
+      errors.user_mail = ['Email is not valid.'];
   }
   else
- errors.error = ['missing fields'];
+    errors.error = ['missing fields'];
   return errors;
 };
 
-function validate_login(data){
+function is_validForUpdate(users) {
+  //console.log(users);
+  const errors = {};
+  if (users.user_prefer && users.user_fullname && users.longitude && users.latitude && users.user_bio && users.user_addresse &&
+    users.user_gender) {
+    //fullname check
+    if (!users.user_fullname.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g))
+      errors.user_fullname = ['Fullname is required'];
+    //check gender
+    if(!users.user_gender.match(/^\b[FM]{1}\b/g))
+      errors.user_gender = ['You most be a man or a women, surely your not something else'];
+    //check user prefer
+    if(!users.user_prefer.match(/^\b[FMX]{1}\b/g))
+      errors.user_prefer = ['You most be a man or a women, surely your not something else'];  
+    //check password
+    if (!users.user_bio.match(/.*\S.*/))
+      errors.user_bio = ['Invalid bio'];
+    if (!users.user_addresse.match(/.*\S.*/))
+      errors.user_addresse = ['Invalid addresse'];
+    if (!(users.longitude >= -180 && users.longitude <= 180) && (Number(users.longitude) === users.longitude && users.longitude % 1 !== 0)) {
+        errors.longitude = 'longitude ERROR';
+    }
+    if (!(users.latitude >= -90 && users.latitude <= 90) && (Number(users.latitude) === users.latitude && dusersata.latitude % 1 !== 0)) {
+        errors.latitude = 'latitude ERROR';
+    }
+  }
+  else
+    errors.error = ['missing fields'];
+  return errors;
+};
+
+
+function validate_login(data) {
   let errors = {};
-  if (data.user_name && data.user_password && data.longitude && data.latitude){
-    if (!data.user_name.match(/^[a-z0-9_]{2,30}$/g)){
+  if (data.user_name && data.user_password && data.longitude && data.latitude) {
+    if (!data.user_name.match(/^[a-z]+([_-]?[a-z0-9])*$/g)) {
       errors.user_name = 'Username ERROR';
     }
-    if (!data.user_password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)){
+    if (!data.user_password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)) {
       errors.user_password = 'password ERROR';
     }
-    if (!(data.longitude >= -180 && data.longitude <= 180) && (Number(data.longitude) === data.longitude && data.longitude % 1 !== 0)){
+    if (!(data.longitude >= -180 && data.longitude <= 180) && (Number(data.longitude) === data.longitude && data.longitude % 1 !== 0)) {
       errors.longitude = 'longitude ERROR';
     }
-    if (!(data.latitude >= -90 && data.latitude <= 90) && (Number(data.latitude) === data.latitude && data.latitude % 1 !== 0)){
+    if (!(data.latitude >= -90 && data.latitude <= 90) && (Number(data.latitude) === data.latitude && data.latitude % 1 !== 0)) {
       errors.latitude = 'latitude ERROR';
     }
-  }else{
+  } else {
 
     errors.fields = 'ERROR: one of fields is Empty.';
   }
   return errors;
 }
 
-function nonull(users)
-{
-  for (key in users) 
-    if (!users[key]) 
+function validate_update(data) {
+  let errors = {};
+  if (data.user_name && data.user_oldpassword && data.user_mail) {
+    if (!data.user_name.match(/^[a-z]+([_-]?[a-z0-9])*$/g))
+    {
+      errors.user_name = 'Username ERROR';
+    }
+    if (!data.user_oldpassword.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)){
+      errors.user_oldpassword = 'old password ERROR';
+    }
+    if (!data.user_mail.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/)){
+      errors.user_mail = 'Email is not valid.';
+    }
+    if(data.user_password){
+      if (!data.user_password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g))
+          errors.user_password = 'password ERROR';
+    }
+  } else
+    errors.fields = 'ERROR: one of fields is Empty.';
+  return errors;
+}
+
+function nonull(users) {
+  for (key in users)
+    if (!users[key])
       delete users[key];
   return users;
 }
 
-exports.list_all_users = function(req, res) {
-    Users.getAllUsers(function(err, users) {
-    if (err)
-      res.send(err);
+exports.list_all_users = function (req, res) {
+  try {
+    Users.getAllUsers(function (err, users) {
+      if (err)
+        res.send(err);
       console.log('res', users);
-    res.send(users);
-  });
+      res.send(users);
+    });
+  } catch (err) { }
 };
 
-exports.Login = function(req,res)
-{
-    var user = req.body;
-    var errors = validate_login(user);
-    if (Object.keys(errors).length != 0){ //check INPUT FIRST
-      return res.json({
-        success: false,
-        errors: errors
-      });
-    }
-    Users.auth(user.user_name,function(err, sqlres) {
-      if (err){
+exports.Login = function (req, res) {
+  var user = req.body;
+  var errors = validate_login(user);
+  if (Object.keys(errors).length != 0) { //check INPUT FIRST
+    return res.json({
+      success: false,
+      errors: errors
+    });
+  }
+  try {
+    Users.auth(user.user_name, function (err, sqlres) {
+      if (err) {
         console.log("Users.auth:: SQL ERROR::", err);
         return res.end();
-      }else{
-        if (sqlres.length){
+      } else {
+        if (sqlres.length) {
           var db_password = sqlres[0].user_password;
           var user_id = sqlres[0].user_id;
           var userpassowrd = require('crypto').createHash('sha256').update(user.user_password).digest('hex');
-          if (db_password.match(userpassowrd)){
+          if (db_password.match(userpassowrd)) {
             var db_isverfiy = sqlres[0].mailverfied;
-            if (db_isverfiy){
+            if (db_isverfiy) {
               let payload = { user: user.user_name, userid: user_id };
               let token = jwt.sign(payload, appSecret, {
-                expiresIn: "24h"
+                expiresIn: "25min"
               });
-              var location = {longitude : user.longitude, latitude : user.latitude, user_addresse: user.user_addresse};
-              Users.updateLocation(user_id,location, function(err) {
-                if (err){
-                  console.log("Users.updateLocation:: SQL ERROR::", err); 
-                  return res.end();
-                }
-              })
+              var location = { longitude: user.longitude, latitude: user.latitude, user_addresse: user.user_addresse };
+              try {
+                Users.updateLocation(user_id, location, function (err) {
+                  if (err) {
+                    console.log("Users.updateLocation:: SQL ERROR::", err);
+                    return res.end();
+                  }
+                });
+              } catch (err) { }
               return res.json({
                 success: true,
                 token: token
               });
-            }else{
+            } else {
               return res.json({
                 success: false,
                 error: "email" //Need To Verfiy email
               });
             }
-          }else{
+          } else {
             return res.json({
               success: false,
               error: "password" //Password incorrect
             });
           }
-        }else{
+        } else {
           return res.json({
             success: false,
             error: "user" //user doesn't exists
@@ -159,65 +212,255 @@ exports.Login = function(req,res)
         }
       }
     });
-
+  } catch (err) { }
 };
-exports.signup = function(req, res) {
-    var new_user = new Users(req.body);
-    var errors = is_valid_user(req.body);
-    if (Object.keys(errors).length != 0)
-      return res.json({
-        success: false,
-        errors: errors
-      });
-    else
-      Users.createUser(new_user, function(err, users) {
-        if (err){
+exports.signup = function (req, res) {
+  var new_user = new Users(req.body);
+  var errors = is_valid_user(req.body);
+  if (Object.keys(errors).length != 0)
+    return res.json({
+      success: false,
+      errors: errors
+    });
+  else
+    try {
+      Users.createUser(new_user, function (err, users) {
+        if (err) {
           console.log("Users.createUser:: SQL ERROR::", err);
           return res.end();
         }
-        if (users === "mail exist" || users === "username exist"){
+        if (users === "mail exist" || users === "username exist") {
           return res.json({
-          success: false,
-          error: users
+            success: false,
+            error: users
           });
         }
-        
+
         //send mail to new user
-        var link = "http://localhost:8081/verify?t="+new_user.user_token+"&u="+new_user.user_mail;
-        send_mail(new_user.user_mail, link); // sending email to user
+        var link = "http://" + host + ":8081/verify?t=" + new_user.user_token + "&u=" + new_user.user_mail;
+        var sbj = "Matcha | Confirm Your E-mail";
+        var msg = "Please click link below to verify your E-mail:</br><a href=\"" + link + "\">Click Here</a><br>Or Open this link on your browser:<br>" + link;
+        send_mail(new_user.user_mail, sbj, msg); // sending email to user
         return res.json({
           success: true,
           signup: users
         });
-  });
-};
-
-
-exports.read_a_user = function(req, res) {
-    Users.getUserById(req.params.userId, function(err, users) {
-    if (err)
-      res.send(err);
-    res.json(users);
-  });
-};
-
-exports.update_a_user = function(req, res) {
-  var data =  {};
-  var users = new Users(req.body);
-  //data = nonull(users);
-  console.log(data);
-  console.log(users);
-  Users.updateById(req.params.userId, users , function(err, users) {
-    if (err){
-      return res.json({
-        success: false
       });
-    }
+    } catch (err) { }
+};
+
+
+// exports.read_a_user = function (req, res) {
+//   try {
+//     Users.getUserById(req.params.userId, function (err, users) {
+//       if (err)
+//         res.send(err);
+//       res.json(users);
+//     });
+//   } catch (err) { }
+// };
+
+var usersupdate = function (users) {
+  if (users.user_name)
+  this.user_name = users.user_name.toLowerCase();
+  if (users.user_password)
+  this.user_password = require('crypto').createHash('sha256').update(users.user_password).digest('hex');
+  if (users.user_mail)
+  this.user_mail = users.user_mail;
+};
+
+exports.update_account = function (req, res) {
+  var userid = req.jwt.userid;
+  var username = req.jwt.user;
+  var users = new usersupdate(req.body);
+  var passwd = req.body.user_oldpassword;
+  console.log("Tried");
+  var errors = validate_update(req.body);
+  if (Object.keys(errors).length != 0)
     return res.json({
-        success: true
-      });
-  });
+      success: false,
+      errors: errors
+    });
+  else{
+  try {
+    Users.authID(userid, function (err, sqlres) {
+      if (err) {
+        console.log("Users.auth:: SQL ERROR::", err);
+        return res.end();
+      } else {
+        if (sqlres.length) {
+          var db_password = sqlres[0].user_password;
+          var userpassowrd = require('crypto').createHash('sha256').update(passwd).digest('hex');
+          if (db_password.match(userpassowrd) && username === sqlres[0].user_name) {
+            try {
+              Users.auth(users.user_name, (err, sqlres1)=>{
+                console.log('res1');
+                console.log(sqlres1);
+                if (err)
+                  return res.end();
+                else if (sqlres1.length){
+                  console.log('xe');
+                  if (sqlres1[0].user_name !== username) //not his username
+                    return res.json({
+                      username: username,
+                      reason: 'taken username',
+                      success: true
+                    });
+                }
+                  console.log('ge');
+                  Users.updateById(userid, users, function (err, sqlres) {
+                    console.log('res');
+                    console.log(sqlres);
+                    if (err) {
+                      return res.json({
+                        success: false
+                      });
+                    }
+                    if (sqlres.affectedRows)
+                    {
+                      // token
+                      let payload = { user: users.user_name, userid: userid };
+                      let token = jwt.sign(payload, appSecret, {
+                        expiresIn: "25min"
+                      });
+                      return res.json({
+                        username: users.user_name,
+                        token: token,
+                        success: true
+                      });
+                    }
+                  });
+              });
+            } catch (err) { }
+          } else {
+            return res.json({
+              success: false
+            });
+          }
+        }
+      }
+    })
+  } catch (err) { }
+}
 };
+
+exports.update_a_user = function (req, res) {
+  var users = new Users(req.body);
+  var userId = req.jwt.userid;
+  //data = nonull(users);
+  var errors = is_validForUpdate(req.body);
+  console.log(errors);
+  if (Object.keys(errors).length != 0)
+    return res.json({
+      success: false,
+      errors: errors
+    });
+  else{
+            try {
+              Users.updateById(userId, users, function (err, sqlres) {
+                if (err) {
+                  return res.json({
+                    success: false
+                  });
+                }
+                console.log(users);
+                console.log();
+                if (sqlres.affectedRows)
+                  return res.json({
+                    success: true
+                  });
+                else
+                  return res.json({
+                    success: false
+                  });
+              });
+            } catch (err) { }
+          }
+};
+
+exports.reset = (req, res) => {
+  var email = req.body.email;
+  if (!email.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/)) {
+    res.end('invalid email');
+  } else {
+    var token = require('crypto').randomBytes(48).toString('hex');
+    var link = "http://" + host + ":8081/reset?t=" + token + "&e=" + email;
+    var sbj = "Matcha | Reset your password";
+    var msg = "reset link:<br>" + link;
+    Users.resetpassword(email, token, (err, sqlres) => {
+      if (err)
+        res.end();
+      console.log(sqlres);
+      if (sqlres.affectedRows) {
+        console.log('sending email...');
+        send_mail(email, sbj, msg);
+        res.send('sent');
+      } else {
+        res.send('not found');
+      }
+    });
+  }
+}
+
+exports.verifyRset = (req, res) => {
+  var email = req.body.email;
+  var token = req.body.token;
+  if (!email.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/)) {
+    res.end('invalid email');
+  } else if (!token.match(/^[a-zA-Z0-9]*$/)) {
+    res.end('invalid token');
+  } else {
+    Users.verifyRset(email, token, (err, sqlres) => {
+      if (err)
+        res.end();
+      if (sqlres.length) {
+        res.send('valid');
+      } else {
+        res.send('unvalid');
+      }
+    });
+  }
+}
+
+exports.changePassword = (req, res) => {
+  var email = req.body.email;
+  var token = req.body.token;
+  var password = req.body.password;
+  if (!email.match(/^[\-0-9a-zA-Z\.\+_]+@[\-0-9a-zA-Z\.\+_]+\.[a-zA-Z]{2,}$/)) {
+    res.end('invalid email');
+  } else if (!token.match(/^[a-zA-Z0-9]*$/)) {
+    res.end('invalid token');
+  } else if (!password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)) {
+    res.end('invalid password');
+  } else {
+    var newpass = require('crypto').createHash('sha256').update(password).digest('hex');
+    Users.changePassword(email, token, newpass, (err, sqlres) => {
+      if (err)
+        res.end();
+      console.log('resultutaat ', sqlres);
+      if (sqlres.affectedRows)
+        res.send('done');
+      else
+        res.send('error');
+    });
+  }
+}
+
+exports.Addlastconnection = (username) => {
+  Users.Addlastconnection(username, (err, res) => {
+    if (err)
+      return ;
+    return res;
+  });
+}
+exports.Getlastconnection = async (username) => {
+  var last;
+  await Users.Getlastconnection(username).then((res) => {
+    last = res[0].last_connection;
+  },
+  (err) => {console.log(err)})
+  return last;
+}
 
 /*
 exports.logout = (req, res) => {

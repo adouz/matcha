@@ -1,7 +1,7 @@
 const messages = require('../models/messagesmodel');
 
 function validate_username(username) {
-    if (!username.match(/^[a-z0-9_]{2,30}$/g))
+    if (!username.match(/^[a-z]+([_-]?[a-z0-9])*$/g))
         return false;
     return true;
 }
@@ -25,7 +25,8 @@ exports.matches = async (req, res) => {
     const username = req.params.username.toLowerCase();
     var resarray = [];
     if (validate_username(username)) {
-        await messages.matches(username).then(
+            try{
+                await messages.matches(username).then(
             async (res) => {
                 for (const item of res) {
                     var obj = {};
@@ -37,6 +38,7 @@ exports.matches = async (req, res) => {
                     obj.selected = false;
                     obj.isOnline = "waiting";
                     obj.room = item.room;
+                    try{
                     await messages.getProfilInfo(obj.username).then(
                         (info) => {
                             if (info[0]) {
@@ -51,12 +53,14 @@ exports.matches = async (req, res) => {
                         },
                         (err) => { console.log(err) }
                     )
+                }catch (err) {}
                     console.log('data:', obj);
                     resarray.push(obj);
                 }
             },
             (err) => { console.log(err) }
         );
+    }catch (err) {}
         return res.json({
             success: true,
             data: resarray
@@ -111,14 +115,17 @@ exports.matches = async (req, res) => {
 }
 
 exports.addMessage = (data) => {
+    try{
     messages.addMessage(data, (err, sqlres) => {
         if (err)
             return;
     });
+}catch (err) {}
 }
 
 exports.getMessages = (req, res) => {
     const room = req.params.room;
+    try {
     messages.getMessages(room, (err, sqlres) => {
         if (err)
             res.end()
@@ -126,4 +133,5 @@ exports.getMessages = (req, res) => {
             res.json(sqlres);
         }
     });
+}catch (err) {}
 }

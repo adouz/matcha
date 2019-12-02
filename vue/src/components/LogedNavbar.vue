@@ -1,82 +1,170 @@
 <template>
-  <b-navbar>
-    <template slot="brand">
-      <b-navbar-item tag="router-link" :to="{ path: '/dashboard' }">
-        <img src="./../assets/logo.png" alt="Chalada Website">
-      </b-navbar-item>
-    </template>
-    <template slot="start">
-      <b-navbar-item tag="router-link" :to="{ path: '/dashboard' }">Dashboard</b-navbar-item>
-      <b-navbar-item tag="router-link" :to="{ path: '/browse' }">Browse</b-navbar-item>
-      <b-navbar-item tag="router-link" :to="{ path: '/messages' }">Messages</b-navbar-item>
-    </template>
-    <template slot="end">
-      <div class="bell">
-        <div @click="notification">
-          <el-dropdown trigger="click" class="is-hidden-touch">
-            <i class="el-icon-bell" style="font-size: 1.93em;">
-              <span v-if="NewNotification" class="NewNotify"></span>
-            </i>
-            <el-dropdown-menu slot="dropdown" class="dropdownlol" >
-              <div v-loading="notifLoading" v-for="(notif, index) in notifi" :key="index" >
-                <el-dropdown-item icon="el-icon-message" :style="notif.read ? 'background-color: rgb(238, 241, 250)' : ''" style="cursor: default;">
-                  <span class="title is-6">{{notif.title}}</span>
-                  <br>
-                  <span class="subtitle is-7">{{notif.msg}}</span>
-                </el-dropdown-item>
+  <div>
+    <!-- disktop navbar -->
+    <b-navbar class="is-hidden-touch trans">
+      <template slot="brand">
+        <b-navbar-item tag="router-link" :to="{ path: '/dashboard' }">
+          <img src="@/assets/logo.png" alt="Chalada Website">
+        </b-navbar-item>
+      </template>
+      <template slot="start">
+        <b-navbar-item tag="router-link" :to="{ path: '/dashboard' }">
+          <b-icon icon="diagnoses"></b-icon>&nbsp;&nbsp;Dashboard
+        </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ path: '/browse' }">
+          <b-icon icon="random"></b-icon>&nbsp;&nbsp;Browse
+        </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ path: '/search' }">
+          <b-icon icon="search"></b-icon>&nbsp;&nbsp;Search
+        </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ path: '/messages' }">
+          <b-icon icon="comments"></b-icon>&nbsp;&nbsp;Messages
+        </b-navbar-item>
+      </template>
+      <template slot="end">
+        <div class="bell">
+          <div @click="notification">
+            <el-dropdown trigger="click" class="is-hidden-touch">
+              <div>
+                <el-badge
+                  :value="nbrNotification"
+                  :max="99"
+                  class="item"
+                  v-if="nbrNotification > 0"
+                >
+                  <b-icon icon="bell" style="font-size: 1.93em;"></b-icon>
+                </el-badge>
+                <b-icon v-else icon="bell" style="font-size: 1.93em;"></b-icon>
               </div>
-            </el-dropdown-menu>
-          </el-dropdown>
+              <el-dropdown-menu slot="dropdown" class="dropdownlol">
+                <div v-loading="notifLoading" v-for="(notif, index) in notifi" :key="index">
+                  <el-dropdown-item
+                    :style="notif.read ? 'background-color: rgb(238, 241, 250)' : ''"
+                    style="cursor: default;"
+                  >
+                    <el-badge is-dot v-if="notif.read">
+                      <i class="el-icon-folder-opened" style="font-size: 1.5em;"></i>
+                    </el-badge>
+                    <i v-else class="el-icon-folder-opened" style="font-size: 1.5em;"></i>
+                    <span class="title is-6">{{notif.title}}</span>
+                    <br>
+                    <span class="subtitle is-7">{{notif.msg}}</span>
+                  </el-dropdown-item>
+                </div>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
         </div>
-      </div>
-      <el-dropdown trigger="click" class="is-hidden-touch">
-        <avatar v-if="imageProfil" :image="imageProfil" :fullname="user.user_fullname" :size="50"></avatar>
-        <avatar v-else :fullname="user.user_fullname" :size="50"></avatar>
-        <el-dropdown-menu slot="dropdown">
+        <el-dropdown trigger="click" class="is-hidden-touch">
+          <avatar v-if="imageProfil" :image="imageProfil" :fullname="user.user_fullname" :size="50"></avatar>
+          <avatar v-else :fullname="user.user_fullname" :size="50"></avatar>
+          <el-dropdown-menu slot="dropdown">
             <router-link class="link" :to="'/profile/'+user.user_name">
-          <el-dropdown-item>
-              <b-icon pack="fas" icon="user-alt"></b-icon>
-              <span>Profile</span>
-          </el-dropdown-item>
+              <el-dropdown-item>
+                <b-icon pack="fas" icon="user-alt"></b-icon>
+                <span>Profile</span>
+              </el-dropdown-item>
             </router-link>
             <router-link class="link" to="/settings/account">
-          <el-dropdown-item>
-              <b-icon pack="fas" icon="user-cog"></b-icon>
-              <span>Settings</span>
-          </el-dropdown-item>
+              <el-dropdown-item>
+                <b-icon pack="fas" icon="user-cog"></b-icon>
+                <span>Settings</span>
+              </el-dropdown-item>
             </router-link>
             <router-link class="link" to="/logout">
-          <el-dropdown-item>
-              <b-icon pack="fas" icon="sign-out-alt"></b-icon>
-              <span>log out</span>
-          </el-dropdown-item>
+              <el-dropdown-item>
+                <b-icon pack="fas" icon="sign-out-alt"></b-icon>
+                <span>log out</span>
+              </el-dropdown-item>
             </router-link>
-        </el-dropdown-menu>
-      </el-dropdown>
-      <div class="visible-mobile">
-        <template>
-          <b-navbar-dropdown :label="user.user_fullname">
-            <b-navbar-item tag="router-link" :to="{ path:'/profile/'+ user.user_name }">
-              <b-icon pack="fas" icon="user-alt"></b-icon>
-              <span>Profil</span>
-            </b-navbar-item>
-            <b-navbar-item tag="router-link" :to="{ path: '/settings/account' }">
-              <b-icon pack="fas" icon="user-cog"></b-icon>
-              <span>Settings</span>
-            </b-navbar-item>
-            <b-navbar-item tag="router-link" :to="{ path: '/logout' }">
-              <b-icon pack="fas" icon="sign-out-alt"></b-icon>
-              <span>log out</span>
-            </b-navbar-item>
-          </b-navbar-dropdown>
-        </template>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </template>
+    </b-navbar>
+    <!-- end -->
+    <!-- mobile navbar -->
+    <nav class="navbar is-hidden-desktop" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand">
+        <b-navbar-item tag="router-link" :to="{ path: '/' }">
+          <img src="@/assets/logo.png" alt="Chalada Website">
+        </b-navbar-item>
+        <a
+          role="button"
+          class="navbar-burger"
+          aria-label="menu"
+          aria-expanded="false"
+          @click="isOpen = !isOpen"
+          v-bind:class="{'is-active': isOpen}"
+        >
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
       </div>
-    </template>
-  </b-navbar>
+      <div class="navbar-menu" v-bind:class="{'is-active': isOpen}">
+        <div class="navbar-start">
+          <router-link class="link" to="/dashboard">
+            <div class="navbar-item">
+              <b-icon icon="diagnoses"></b-icon>&nbsp;&nbsp;Dashboard
+            </div>
+          </router-link>
+          <router-link class="link" to="/browse">
+            <div class="navbar-item">
+              <b-icon icon="search"></b-icon>&nbsp;&nbsp;Browse
+            </div>
+          </router-link>
+           <router-link class="link" to="/search">
+            <div class="navbar-item">
+              <b-icon icon="random"></b-icon>&nbsp;&nbsp;Search
+            </div>
+          </router-link>
+          <router-link class="link" to="/messages">
+            <div class="navbar-item">
+              <b-icon icon="comments"></b-icon>&nbsp;&nbsp;Messages
+            </div>
+          </router-link>
+          <div @click="turnoff">
+          <router-link class="link" to="/notification">
+            <div class="navbar-item">
+              <el-badge :value="nbrNotification" :max="99" class="item" v-if="nbrNotification > 0">
+                <b-icon icon="bell"></b-icon>
+              </el-badge>
+              <b-icon v-else icon="bell"></b-icon>&nbsp;&nbsp;Notification
+            </div>
+          </router-link>
+          </div>
+        </div>
+        <div class="navbar-end">
+          <b-navbar-dropdown :label="user.user_fullname">
+            <router-link class="link" :to="{ path:'/profile/'+ user.user_name }">
+              <div class="navbar-item">
+                <b-icon pack="fas" icon="user-alt"></b-icon>
+                <span>Profil</span>
+              </div>
+            </router-link>
+            <router-link class="link" :to="{ path: '/settings/account' }">
+              <div class="navbar-item">
+                <b-icon pack="fas" icon="user-cog"></b-icon>
+                <span>Settings</span>
+              </div>
+            </router-link>
+            <router-link class="link" :to="{ path: '/logout' }">
+              <div class="navbar-item">
+                <b-icon pack="fas" icon="sign-out-alt"></b-icon>
+                <span>log out</span>
+              </div>
+            </router-link>
+          </b-navbar-dropdown>
+        </div>
+      </div>
+    </nav>
+    <!-- end -->
+  </div>
 </template>
 
 <script>
 import Avatar from "vue-avatar-component";
+
 export default {
   components: { Avatar },
   data() {
@@ -84,23 +172,16 @@ export default {
       notifi: [],
       notifLoading: true,
       imageProfil: null,
-      NewNotification: false
+      NewNotification: false,
+      nbrNotification: 0,
+      isOpen: false
     };
   },
   // beforeRouteLeave (to, from, next) {
   //   console.log('beforeRouteLeave');
-  //   if (
-  //     !this.user.user_gender ||
-  //     !this.user.user_bio ||
-  //     !this.user.user_prefer || !this.user_images.length || !this.user_tags.length
-  //   ) {
-  //     this.$message({
-  //     message: 'Warning, you have to fill your profile first',
-  //     type: 'warning'
-  //     });
-  //   }else{
+  //   if (to.path === "/notification"){
   //     next();
-  //   }
+  //   }else next()
   // },
   computed: {
     user: function() {
@@ -111,68 +192,96 @@ export default {
     },
     user_tags: function() {
       return this.$store.getters.getTags;
-    },
-
+    }
   },
-created() {
+  created() {
     console.log(this.user_images);
-    var token = localStorage.getItem("token");
-    this.$store.dispatch("login", { user: this.user.user_name, token: token }).then(
-      res => {
-        var img = res.data.images;
-        img.forEach(element => {
-          if (element.image_type === "PROFIL") this.imageProfil = element.url;
-        });
-      }
-    );
+    this.update();
   },
   mounted() {
-    // user Data
-    if (!localStorage.token) this.$router.push({ path: "/login" });
-    console.log(!this.user.user_gender ,!this.user.user_bio , !this.user.user_prefer, this.user_images.length, this.user_tags.length);
-    if (!this.user.user_gender || !this.user.user_bio || !this.user.user_prefer || !this.user_images.length || !this.user_tags.length)
+    this.$root.$on("refreshAvatar", () => {
+      console.log("REFRESHED AVATAR");
+      this.imageProfil = null;
+      this.update();
+    });
+    // var img = this.user_images;
+    // img.forEach(element => {
+    //   if (element.image_type === "PROFIL")
+    //     this.imageProfil = element.url;
+    // });
+
+    if (!localStorage.token) {
+      console.log('LogedNavbar mounted:: token not found');
+      // if (this.$router.currentRoute.path !== "/login")
+      //   this.$router.push({ path: "/login" });
+    }
+    console.log(
+      "only here",
+      !this.user.user_gender,
+      !this.user.user_bio,
+      !this.user.user_prefer,
+      !this.user_images.length,
+      this.user_tags.length
+    );
+    if (
+      !this.user.user_gender ||
+      !this.user.user_bio ||
+      !this.user.user_prefer ||
+      !this.user_images.length ||
+      !this.user_tags.length
+    )
       if (this.$router.currentRoute.path !== "/settings/profile")
         this.$router.push({ path: "/settings/profile" });
-    this.$socket.emit("new user", this.user.user_name);
-    // TODO: first login notification
-    this.$socket.on("notification", data => {
-      this.$notify({
-        title: data.title,
-        message: data.msg,
-        position: "bottom-right"
-      });
+    this.$socket.emit("new user", {username:this.user.user_name});
+    // check for new notification
+    this.$nextTick(this.checkNotif());
+    // this.$socket.on("notification", () => {
+    //   console.log("i got notification on logedNavbar.vue");
+    //   this.nbrNotification = this.nbrNotification + 1;
+    //   this.NewNotification = true;
+    // });
+  },
+  sockets:{
+    notification: function () {
+      console.log("i got notification on logedNavbar.vue");
+      this.nbrNotification = this.nbrNotification + 1;
       this.NewNotification = true;
-    });
+    }
   },
   methods: {
+    checkNotif() {
+      this.$http
+        .get("/newNotification")
+        .then(res => {
+          console.log("new notification", res.data);
+          if (res.data.length) this.nbrNotification = res.data.length;
+        })
+        .catch(err => console.log(err));
+    },
+    update() {
+      this.$store
+        .dispatch("login", { user: this.user.user_name })
+        .then(res => {
+          var img = res.data.images;
+          img.forEach(element => {
+            if (element.image_type === "PROFIL")
+              this.imageProfil = element.url;
+          });
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
     getNotification(username) {
       return new Promise((resolve, reject) => {
         console.log("send notification req!");
         this.$http
           .get("/notification/" + username)
           .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
             var data = res.data;
             resolve(data);
           })
           .catch(err => reject(err));
-      });
-    },
-    SetAllNotification() {
-      return new Promise((resolve, reject) => {
-        this.$http
-          .post("SetAllNotification/")
-          .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
-            console.log(res.data);
-            resolve(res.data);
-          })
-          .catch(err => {
-            console.log(err);
-            reject(err);
-          });
       });
     },
     notification() {
@@ -186,17 +295,21 @@ created() {
           this.$http
             .post("SetAllNotification/")
             .then(res => {
-            if (res.data.message === "Failed to authenticate token.")
-              this.$router.push({ path: "/login" });
               console.log(res.data);
             })
             .catch(err => {
               console.log(err);
             });
+          this.NewNotification = false;
+          this.nbrNotification = 0;
           this.notifLoading = false;
         },
         err => console.error(err)
       );
+    },
+    turnoff(){
+      this.NewNotification = false;
+      this.nbrNotification = 0;
     }
   }
 };
@@ -236,5 +349,4 @@ created() {
   border-radius: 50%;
   position: fixed;
 }
-
 </style>

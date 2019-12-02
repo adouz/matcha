@@ -8,7 +8,7 @@ export default {
     var userdata = this.$store.getters.getUser;
     if(userdata){
         console.log(userdata);
-    this.$socket.emit('logout', userdata.user_name);
+    this.$socket.emit('logout', {username: userdata.user_name});
     this.$store
       .dispatch("logout")
       .then(() => {
