@@ -32,8 +32,6 @@
                 </div>
                 <div class="media-content">
                   <p class="title is-4">
-                    <!-- <a :href="'/profile/' + u.username">
-                    {{u.username}}</a>-->
                     <span class="fullname">
                       {{u.username}}
                       <el-tooltip
@@ -45,13 +43,19 @@
                       >
                         <span :class="u.isOnline"></span>
                       </el-tooltip>
-                      <el-tooltip v-else class="item" effect="dark" :content="'offline: '+u.lastconnnection" placement="left">
+                      <el-tooltip
+                        v-else
+                        class="item"
+                        effect="dark"
+                        :content="'offline: '+u.lastconnnection"
+                        placement="right"
+                      >
                         <span :class="u.isOnline"></span>
                       </el-tooltip>
                     </span>
-                    <!-- <i class="el-icon-link"></i> -->
                     <!-- ONLINE STATUS -->
                   </p>
+                  <!-- <p class="subtitle is-6" v-if="u.typing">{{typing}} is typing...</p> -->
                   <p class="subtitle is-6">{{u.isOnline}}</p>
                 </div>
               </div>
@@ -73,8 +77,8 @@
           <div class="messages" ref="msg">
             <div class="message" v-for="(msg, indx) in messages" :key="indx">
               <div v-if="msg.room === room">
-                <div class="notification user2" v-if="msg.from == user.user_name">{{msg.msg}}</div>
-                <div class="notification is-info user1" v-else>{{msg.msg}}</div>
+                  <div class="notification user2" v-if="msg.from == user.user_name">{{msg.msg}}</div>
+                  <div class="notification is-info user1" v-else>{{msg.msg}}</div>
               </div>
             </div>
             <div v-if="!messages[0]">
@@ -88,7 +92,7 @@
             </div>
           </div>
           <div class="typing">
-            <p v-if="room && typing">{{typing}} is typing...</p>
+            <p v-if="typing === sendto">{{typing}} is typing...</p>
           </div>
           <picker v-if="showEmo" :data="emojiIndex" class="EmojiPicker" @select="addEmoji"/>
           <div v-if="room" class="controls field has-addons">
@@ -101,7 +105,8 @@
               <input
                 class="input"
                 type="text"
-                placeholder="write something here"
+                maxlength="300"
+                placeholder="write your message here"
                 v-model="newMessage"
                 @keyup.enter="send()"
               >
@@ -123,8 +128,10 @@ import data from "../data/all.json";
 import { Picker, EmojiIndex } from "emoji-mart-vue-fast";
 import "emoji-mart-vue-fast/css/emoji-mart.css";
 import io from "socket.io-client";
-import moment from 'moment'
-var socket = io.connect(":3000/messages",{query: 'token='+localStorage.getItem("token")});
+import moment from "moment";
+var socket = io.connect(":3000/messages", {
+  query: "token=" + localStorage.getItem("token")
+});
 
 export default {
   components: {
@@ -154,28 +161,29 @@ export default {
     let users = this.users;
     users.forEach(user => {
       this.sockets.unsubscribe("isOnline" + user.username);
+      this.sockets.unsubscribe("deleteroom");
     });
     next();
   },
   mounted() {
     this.$http
-      .get("matches/" + this.user.user_name)
+      .get("matches")
       .then(res => {
         if (res.data.data) {
           this.users = res.data.data;
-          console.log(this.users);
+          //console.log(this.users);
           // Online emit
           this.users.forEach(user => {
-            this.$socket.emit("Online", {username: user.username});
+            this.$socket.emit("Online", { username: user.username });
           });
         }
         this.loading = false;
       })
       .catch(err => {
-        console.error(err);
+        console.log(err);
       });
     socket.on("message from room", data => {
-      console.log("message from room ::", data);
+      //console.log("message from room ::", data);
       this.messages = [...this.messages, data];
       this.$nextTick(() => {
         var msgdis = this.$refs.msg;
@@ -184,20 +192,31 @@ export default {
         }
       });
     });
+    // typing under the user name
     socket.on("typing", data => {
+      // this.users.forEach(user => {
+      //   if (user.username === data) {
+      //     //console.log("typing " + data);
+      //     user.typing = data;
+      //   }
+      // });
       if (data != this.user.user_name) this.typing = data;
     });
 
     socket.on("stopTyping", data => {
+      // this.users.forEach(user => {
+      //   if (user.username === data) user.typing = "";
+      // });
+      //console.log("stopTyping " + data);
       if (data != this.user.user_name) this.typing = false;
     });
-    this.$socket.on('deleteroom',(data) => {
+    this.sockets.subscribe("deleteroom", data => {
       this.users.forEach((elm, i) => {
-        console.log(elm);
-        if (elm.username === data.blocked || elm.username === data.blocker){
-          console.log('delete '+elm.username);
+        //console.log(elm);
+        if (elm.username === data.blocked || elm.username === data.blocker) {
+       //   console.log("delete " + elm.username);
           this.room = null;
-          this.users.splice(i,1);
+          this.users.splice(i, 1);
         }
       });
     });
@@ -205,16 +224,16 @@ export default {
   watch: {
     newMessage(val) {
       val
-        ? socket.emit("typing", { from: this.user.user_name, room: this.room, token:localStorage.getItem("token") })
+        ? socket.emit("typing", {
+            from: this.user.user_name,
+            room: this.room,
+            token: localStorage.getItem("token")
+          })
         : socket.emit("stopTyping", {
             from: this.user.user_name,
             room: this.room,
-            token:localStorage.getItem("token")
+            token: localStorage.getItem("token")
           });
-    },
-    sendto(val) {
-      console.log(val);
-      this.$refs.msg.scrollTop = this.$refs.msg.scrollHeight;
     },
     users: "onlinesocket"
   },
@@ -223,19 +242,21 @@ export default {
       let users = this.users;
       users.forEach(user => {
         this.sockets.subscribe("isOnline" + user.username, data => {
-          if (data.online){
-            user.lastconnnection = '';
+          if (data.online) {
+            user.lastconnnection = "";
             user.isOnline = "online";
-          }else{
+          } else {
             user.isOnline = "offline";
-            user.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
-          }  
+            user.lastconnnection = moment(data.last).format(
+              "YYYY-MM-DD HH:mm:ss"
+            );
+          }
         });
       });
     },
     addEmoji(emoji) {
       var emo = emoji.native;
-      console.log(emo);
+      //console.log(emo);
       if (this.newMessage) this.newMessage = this.newMessage + emo;
       else this.newMessage = emo;
       this.showEmo = false;
@@ -247,7 +268,7 @@ export default {
         from: this.user.user_name,
         to: this.sendto,
         msg: this.newMessage,
-        token:localStorage.getItem("token")
+        token: localStorage.getItem("token")
       });
       this.newMessage = "";
     },
@@ -264,14 +285,26 @@ export default {
     },
     clickeduser(i) {
       this.chatloading = true;
+      this.newMessage = null;
       this.room = this.users[i].room;
       let roomMessages = this.getMessages(this.room);
       roomMessages.then(
-        data => (this.messages = data),
+        data => {
+          this.messages = data;
+          this.$nextTick(() => {
+            var msgdis = this.$refs.msg;
+            if (msgdis) {
+              msgdis.scrollTop = msgdis.scrollHeight;
+            }
+          });
+        },
         err => console.log(err)
       );
       this.chatloading = false;
-      socket.emit("joinroom", {room: this.users[i].room, token:localStorage.getItem("token")});
+      socket.emit("joinroom", {
+        room: this.users[i].room,
+        token: localStorage.getItem("token")
+      });
       this.users[i].selected = true;
       this.users.forEach(function(user, index) {
         if (index !== i) {
@@ -326,6 +359,7 @@ export default {
   clear: both;
   margin-bottom: 5px;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 .user2 {
   max-width: 400px;
@@ -335,6 +369,8 @@ export default {
   margin-right: 3%;
   margin-bottom: 5px;
   overflow: hidden;
+  text-overflow: ellipsis;
+
 }
 .users {
   max-height: 600px;
@@ -386,7 +422,7 @@ export default {
   .box {
     height: fit-content;
     max-height: 320px;
-    padding:none;
+    padding: none;
   }
   .messages {
     padding: 5px;
@@ -406,13 +442,13 @@ export default {
     padding-left: 1.5rem;
     border-radius: 0.5rem;
   }
-  .card{
+  .card {
     border-radius: 0.5rem;
   }
   .no-matches {
     margin-left: auto;
     margin-right: auto;
     margin-top: 20px;
-} 
+  }
 }
 </style>

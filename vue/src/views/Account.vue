@@ -36,7 +36,7 @@
                 :type="Errors.username.err"
                 :message="Errors.username.msg"
               >
-                <b-input v-model="user_name"></b-input>
+                <b-input v-model="user_name" maxlength="30"></b-input>
               </b-field>
               <br>
               <b-field
@@ -45,7 +45,7 @@
                 :type="Errors.email.err"
                 :message="Errors.email.msg"
               >
-                <b-input type="email" v-model="user_mail" maxlength="30"></b-input>
+                <b-input type="email" v-model="user_mail" maxlength="50"></b-input>
               </b-field>
               <b-field grouped>
                 <b-field
@@ -55,7 +55,14 @@
                   :type="Errors.passwordfield.err"
                   :message="Errors.passwordfield.msg"
                 >
-                  <b-input type="password" v-model="passwordfield" expanded maxlength="30" autocomplete="new-password" password-reveal></b-input>
+                  <b-input
+                    type="password"
+                    v-model="passwordfield"
+                    expanded
+                    maxlength="30"
+                    autocomplete="new-password"
+                    password-reveal
+                  ></b-input>
                 </b-field>
                 <b-field
                   label="Confirm Password"
@@ -64,25 +71,38 @@
                   :type="Errors.confirmpasswordfield.err"
                   :message="Errors.confirmpasswordfield.msg"
                 >
-                  <b-input type="password" v-model="confirmpasswordfield" expanded maxlength="30" autocomplete="new-password" password-reveal></b-input>
+                  <b-input
+                    type="password"
+                    v-model="confirmpasswordfield"
+                    expanded
+                    maxlength="30"
+                    autocomplete="new-password"
+                    password-reveal
+                  ></b-input>
                 </b-field>
               </b-field>
             </section>
             <b-field
-                  label="Password"
-                  expanded
-                  :label-position="labelPosition"
-                  :type="Errors.oldPassword.err"
-                  :message="Errors.oldPassword.msg"
-                >
-                  <b-input type="password" v-model="oldPassword" expanded maxlength="30"  autocomplete="new-password" password-reveal></b-input>
-                </b-field>
-            <b-message v-if="err" type="is-danger">
-              SOMTHING WENT WRONG MAYBE YOU ENTRED A WRONG PASSWORD!
-            </b-message>
-            <b-message v-if="confirm" type="is-success">
-              YOUR CHANGES ARE SUCCESSFULLY DONE!
-            </b-message>
+              label="Password"
+              expanded
+              :label-position="labelPosition"
+              :type="Errors.oldPassword.err"
+              :message="Errors.oldPassword.msg"
+            >
+              <b-input
+                type="password"
+                v-model="oldPassword"
+                expanded
+                maxlength="30"
+                autocomplete="new-password"
+                password-reveal
+              ></b-input>
+            </b-field>
+            <b-message
+              v-if="err"
+              type="is-danger"
+            >SOMTHING WENT WRONG MAYBE YOU ENTRED A WRONG PASSWORD!</b-message>
+            <b-message v-if="confirm" type="is-success">YOUR CHANGES ARE SUCCESSFULLY DONE!</b-message>
             <div class="level-right">
               <button type="submit" class="button is-success">Submit</button>
             </div>
@@ -94,7 +114,6 @@
 </template>
 
 <script>
-
 export default {
   name: "Account",
   data() {
@@ -131,40 +150,18 @@ export default {
       }
     };
   },
-  // beforeRouteLeave(to, from, next) {
-  //   this.$store
-  //     .dispatch("login", { user: this.user_name})
-  //     .then(() => {
-  //       next();
-  //     })
-  //     .catch(err => {
-  //       console.log(err);
-  //     });
-  // },
   created() {
     this.loadProfil();
-    // this.$store
-    //   .dispatch("login", { user: this.userdata.user_name })
-    //   .then(() => {
-    //         this.loadProfil();
-    //   })
-    //   .catch(err => {
-    //     console.log(err);
-    //   });
-    // console.log("updating DATA");
   },
   computed: {
     userdata: function() {
       return this.$store.getters.getUser;
     }
   },
-  // mounted() {
-  //   console.log(this.user);
-  // },
   methods: {
     loadProfil() {
       this.user_name = this.userdata.user_name;
-      this.user_mail= this.userdata.user_mail;
+      this.user_mail = this.userdata.user_mail;
     },
     UpdateAccount() {
       if (this.validate(this.passwordfield !== "")) {
@@ -182,7 +179,7 @@ export default {
             user_mail: this.user_mail,
             user_oldpassword: this.oldPassword
           };
-        console.log(user);
+       //console.log(user);
         this.$http
           .put("usersaccount/", user)
           .then(res => {
@@ -191,38 +188,38 @@ export default {
               this.confirm = false;
             } else {
               this.user_name = res.data.username;
-              //this.confirm = true;
-              console.log(this.userdata.username);
-              if(res.data.token)
-              {
+              //console.log(this.userdata.username);
+              if (res.data.token) {
                 // change token
                 localStorage.setItem("token", res.data.token);
-                console.log('dispatch::::');
+                //console.log("dispatch::::");
                 //change data
                 this.$store
-                .dispatch("login", {user: this.user_name})
-                .then(() => {
-                  this.confirm = true;
-                  this.err = false;
-                })
-                .catch(err => {
-                  console.log(err);
-                });
-              }else{
+                  .dispatch("login", { user: this.user_name })
+                  .then(() => {
+                    this.confirm = true;
+                    this.err = false;
+                  })
+                  .catch(err => {
+                    console.log(err);
+                  });
+              } else {
                 //username already taken
-                console.log(res.data.reason);
+                //console.log(res.data.reason);
               }
             }
-            //delete this.user.oldPassword;
-            //this.$store.dispatch("update", this.user);
           })
           .catch(err => {
-            console.error(err)
-            });
+            console.log(err);
+          });
       }
     },
     validate(passwordfield) {
-      if (!this.user_name.match(/^[a-z]+([_-]?[a-z0-9])*$/g)|| this.user_name.length > 30 || this.user_name.length < 3) {
+      if (
+        !String(this.user_name).match(/^[a-z]+([_-]?[a-z0-9])*$/g) ||
+        this.user_name.length > 30 ||
+        this.user_name.length < 3
+      ) {
         //a-z 0-9 _ 2~30
         this.Errors.username.err = "is-danger";
         this.Errors.username.msg = "this username is unvalide";
@@ -233,7 +230,7 @@ export default {
       }
 
       if (
-        !this.user_mail.match(
+        !String(this.user_mail).match(
           /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/gi
         )
       ) {
@@ -246,20 +243,20 @@ export default {
       }
 
       if (
-          !this.oldPassword.match(
-            /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
-          )
-        ) {
-          this.Errors.oldPassword.err = "is-danger";
-          this.Errors.oldPassword.msg = "your password is wrong";
-          return false;
-        } else {
-          this.Errors.oldPassword.err = "is-success";
-          this.Errors.oldPassword.msg = "";
-        }
+        !String(this.oldPassword).match(
+          /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
+        )
+      ) {
+        this.Errors.oldPassword.err = "is-danger";
+        this.Errors.oldPassword.msg = "your password is wrong";
+        return false;
+      } else {
+        this.Errors.oldPassword.err = "is-success";
+        this.Errors.oldPassword.msg = "";
+      }
       if (passwordfield === true) {
         if (
-          !this.passwordfield.match(
+          !String(this.passwordfield).match(
             /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
           )
         ) {
@@ -272,10 +269,10 @@ export default {
         }
 
         if (
-          !this.confirmpasswordfield.match(
+          !String(this.confirmpasswordfield).match(
             /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
           ) ||
-          !this.confirmpasswordfield.match(this.password)
+          !String(this.confirmpasswordfield).match(this.passwordfield)
         ) {
           this.Errors.confirmpasswordfield.err = "is-danger";
           this.Errors.confirmpasswordfield.msg = "your passwords dosn't match";

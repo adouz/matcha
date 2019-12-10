@@ -1,6 +1,5 @@
 <template>
 <div class="opd">
-
   <div v-loading="notifLoading" class="box">
     <div class="box is-hidden-desktop" v-for="(notif, index) in notifi" :key="index" :style="notif.read ? 'background-color: rgb(238, 241, 250)' : ''">
         <el-badge is-dot v-if="notifi.read">
@@ -37,8 +36,8 @@ export default {
   },
   sockets: function(data) {
       data.read = 1;
-      console.log('i got notification on notifcation.vue');
-      console.log(data);
+      //console.log('i got notification on notifcation.vue');
+      //console.log(data);
       // Add data to the Beginning of notifi
       this.notifi.unshift(data);
       this.NewNotification = true;
@@ -47,15 +46,6 @@ export default {
     // get notification
     // after page render
     this.$nextTick(this.notification());
-    //if a got new notification socket
-    // this.$socket.on("notification", (data) => {
-    //   data.read = 1;
-    //   console.log('i got notification on notifcation.vue');
-    //   console.log(data);
-    //   // Add data to the Beginning of notifi
-    //   this.notifi.unshift(data);
-    //   this.NewNotification = true;
-    // });
   },
   computed: {
     user: function() {
@@ -63,11 +53,11 @@ export default {
     }
   },
   methods: {
-    getNotification(username) {
+    getNotification() {
       return new Promise((resolve, reject) => {
-        console.log("send notification req!");
+      //  console.log("send notification req!");
         this.$http
-          .get("/notification/" + username)
+          .get("/notification")
           .then(res => {
             var data = res.data;
             resolve(data);
@@ -80,11 +70,11 @@ export default {
         this.$http
           .post("SetAllNotification/")
           .then(res => {
-            console.log(res.data);
+          //  console.log(res.data);
             resolve(res.data);
           })
           .catch(err => {
-            console.log(err);
+      //      console.log(err);
             reject(err);
           });
       });
@@ -93,14 +83,15 @@ export default {
       this.notifLoading = true;
       this.NewNotification = false;
       // set all notification as read
-      this.getNotification(this.user.user_name).then(
+      this.getNotification().then(
         data => {
           this.notifi = data;
-          console.log(data);
+          //console.log(data);
           this.$http
             .post("SetAllNotification/")
             .then(res => {
-              console.log(res.data);
+              res;
+            //  console.log(res.data);
             })
             .catch(err => {
               console.log(err);
@@ -109,7 +100,7 @@ export default {
           this.nbrNotification = 0;
           this.notifLoading = false;
         },
-        err => console.error(err)
+        err => console.log(err)
       );
     }
   }

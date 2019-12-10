@@ -1,3 +1,4 @@
+import "babel-polyfill"
 import Vue from 'vue'
 import App from './App.vue'
 import Buefy from 'buefy'
@@ -8,8 +9,11 @@ import 'element-ui/lib/theme-chalk/index.css';
 import VueSocketIO from 'vue-socket.io';
 import * as VueGoogleMaps from 'vue2-google-maps'
 import io from 'socket.io-client';
-//import VueGoogleAutocomplete from 'vue-google-autocomplete';
 import VueCarousel from 'vue-carousel';
+import VModal from 'vue-js-modal'
+
+Vue.use(VModal, { dialog: true })
+
 Vue.use(VueGoogleMaps, {
   load: {
     libraries: 'places',
@@ -18,15 +22,13 @@ Vue.use(VueGoogleMaps, {
 })
 
 //socket.io
-var socket = io.connect("http://localhost:3000", {
+var socket = io.connect(":3000", {
   'query': 'token=' + localStorage.getItem('token')
 });
-// console.log(socket.connected);
 Vue.use(new VueSocketIO({
-  debug: true,
+  debug: false,
   connection: socket
 }))
-// Vue.prototype.$socket = socket;
 
 
 //icons 
@@ -59,14 +61,14 @@ Vue.config.productionTip = false
 
 //AXIOS prototype
 const base = axios.create({
-  baseURL: 'http://'+window.location.hostname+':3000'
+  baseURL: 'http://'+window.location.hostname+':3000/api'
 })
 
 Vue.prototype.$http = base
 
 // request middlware for axios to add token in header
 Vue.prototype.$http.interceptors.request.use(config => {
-  console.log('Request was sent to '+window.location.hostname);
+  //console.log('Request was sent to '+window.location.hostname);
   var token = localStorage.getItem("token");
   if (token) config.headers.common['x-access-token'] = token;
   return config;

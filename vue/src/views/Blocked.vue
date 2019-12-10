@@ -24,32 +24,6 @@
         <!-- end -->
       </div>
     </div>
-    <!-- <div class="column">
-      <div class="box">
-        <el-table :data="users">
-          <div slot="empty">
-            <span>empty</span>
-          </div>
-          <el-table-column width="140">
-            <figure class="image is-64x64" slot-scope="{row}">
-              <router-link class="link" :to="{ path:'/profile/'+ row.username }">
-                <div class="open">
-                  <el-button class="buttonn" icon="el-icon-user-solid" circle></el-button>
-                </div>
-                <img class="is-rounded img" :src="row.image">
-              </router-link>
-            </figure>
-          </el-table-column>
-          <el-table-column prop="name" width="120"></el-table-column>
-          <el-table-column prop="date"></el-table-column>
-          <el-table-column header-align="right">
-            <div slot-scope="{row}">
-              <el-button type="danger" icon="el-icon-delete" circle @click="unblock(row.username)"></el-button>
-            </div>
-          </el-table-column>
-        </el-table>
-      </div>
-    </div>-->
     <div class="column">
       <div class="box scroll">
         <el-row :span="2" v-for="(u, i) in users" :key="i" class="box">
@@ -95,7 +69,7 @@ export default {
     this.$http
       .get("/blocked")
       .then(res => {
-        console.log(res.data);
+        //console.log(res.data);
         this.users = res.data;
       })
       .catch(err => {
@@ -107,11 +81,12 @@ export default {
       this.users.forEach((element, i) => {
         if (element.username === username) this.users.splice(i, 1);
       });
-      console.log("unblock ", username);
+      //console.log("unblock ", username);
       this.$http
         .post("/unblock/" + username)
         .then(res => {
-          console.log(res.data);
+          res;
+          //console.log(res.data);
         })
         .catch(err => console.log(err));
     }

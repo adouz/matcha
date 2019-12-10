@@ -11,10 +11,10 @@ exports.list_all_tags = function (req,res) {
          res.json(err);
       }
     )
-  } catch (err) {console.log(err)}
+  } catch (err) {/*console.log(err)*/}
 };
 function validate_tag(tag) {
-  if (!tag.text.match(/.*\S.*/))
+  if (!String(tag.text).match(/.*\S.*/) || tag.text.length > 20)
       return false;
   return true;
 }
@@ -30,27 +30,33 @@ function validate_tag(tag) {
 };
 */
 exports.create_a_tag = function (req, res) {
-  console.log(req.body);
+  //console.log(req.body);
   var tags = req.body.newtags;
   var selectedtags = req.body.selectedtags;
   var user_id = req.body.user_id;
   for (tag in tags) {
     if (!validate_tag(tags[tag]))
       continue;
-    Tags.createTag(tags[tag], (err) => {
+    try{
+      Tags.createTag(tags[tag], (err) => {
       if (err)
         res.end({ err: err.msg });
     })
+  } catch (err) { }
   }
+  try{
   Tags.deleteTags(user_id, (err) => {
     if (err)
       res.end({ err: err.msg });
   })
+  } catch (err) { }
   for (tag in selectedtags) {
+    try{
     Tags.AssignTag(selectedtags[tag], user_id, (err) => {
       if (err)
         res.end({ err: err.msg });
     })
+    } catch (err) { }
   }
   res.json({ ok: true });
 };

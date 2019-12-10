@@ -1,11 +1,7 @@
 <template>
-  <!-- TODO: not redricting from profile to other profile -->
   <div v-loading="loading">
     <article v-if="blocked" class="message is-danger">
-      <div class="message-body">
-        {{blockedmsg}}
-        <!-- Lorem ipsum dolor sit amet, consectetur adipiscing elit. <strong>Pellentesque risus mi</strong>, tempus quis placerat ut, porta nec nulla. Vestibulum rhoncus ac ex sit amet fringilla. Nullam gravida purus diam, et dictum <a>felis venenatis</a> efficitur. Aenean ac <em>eleifend lacus</em>, in mollis lectus. Donec sodales, arcu et sollicitudin porttitor, tortor urna tempor ligula, id porttitor mi magna a neque. Donec dui urna, vehicula et sem eget, facilisis sodales sem. -->
-      </div>
+      <div class="message-body">{{blockedmsg}}</div>
     </article>
 
     <div v-if="!blocked" class="columns">
@@ -15,46 +11,6 @@
             <img v-if="srcProfile.url" :src="srcProfile.url" @click="Profile = true">
           </figure>
         </div>
-        <!--<div class="columns is-gapless is-mobile">
-            <div class="column"><figure class="image is-square">
-            <img v-if="src0" :src="src0" @click="Image0 = true">
-            </figure></div>
-            <div class="column"><figure class="image is-square">
-            <img v-if="src1" :src="src1" @click="Image1 = true">
-            </figure></div>
-                <div class="column"><figure class="image is-square">
-            <img v-if="src2" :src="src2" @click="Image2 = true">
-            </figure></div>
-                <div class="column"><figure class="image is-square">
-            <img v-if="src3" :src="src3" @click="Image3 = true">
-            </figure></div>
-        </div>-->
-
-        <!--<b-modal :active.sync="Profile">
-            <p class="image">
-                <img :src="srcProfile">
-            </p>
-        </b-modal>
-        <b-modal :active.sync="Image0">
-            <p class="image">
-                <img :src="src0">
-            </p>
-        </b-modal>
-        <b-modal :active.sync="Image1">
-            <p class="image">
-                <img :src="src1">
-            </p>
-        </b-modal>
-        <b-modal :active.sync="Image2">
-            <p class="image">
-                <img :src="src2">
-            </p>
-        </b-modal>
-        <b-modal :active.sync="Image3">
-            <p class="image">
-                <img :src="src3">
-            </p>
-        </b-modal>-->
       </div>
       <div class="column is-half">
         <div class="box">
@@ -64,14 +20,28 @@
                 {{ fullname }}
                 <span class="title is-6">· {{ age }}</span>
                 <!-- green dot for online users -->
-                <el-tooltip v-if="!lastconnnection" class="item" effect="dark" :content="isOnline" placement="right">
+                <el-tooltip
+                  v-if="!lastconnnection"
+                  class="item"
+                  effect="dark"
+                  :content="isOnline"
+                  placement="right"
+                >
                   <span :class="isOnline"></span>
                 </el-tooltip>
-                <el-tooltip v-else class="item" effect="dark" :content="'offline: ' + lastconnnection" placement="right">
+                <el-tooltip
+                  v-else
+                  class="item"
+                  effect="dark"
+                  :content="'offline: ' + lastconnnection"
+                  placement="right"
+                >
                   <span :class="isOnline"></span>
                 </el-tooltip>
               </span>
               <p class="subtitle is-7">{{ address }}</p>
+              <el-button v-if="matched" size="mini" type="danger" round>Matched</el-button>
+              
             </div>
             <div class="column">
               <div v-if="!isUserProfile" class="buttons has-addons is-right">
@@ -165,7 +135,7 @@
           <div class="columns is-mobile">
             <div class="column">
               <figure class="image is-square">
-                <img v-if="src[0]" :src="src[0].url" @click="Image0 = true">
+                <img v-if="src[0]" :src="src[0].url" @click="Image0 = true" onerror="this.src='../assets/pic.svg'">
               </figure>
             </div>
             <div class="column">
@@ -223,7 +193,7 @@
 </template>
 
 <script>
-import moment from 'moment'
+import moment from "moment";
 export default {
   name: "Profile",
   data() {
@@ -237,7 +207,8 @@ export default {
       bio: "bio...",
       tags: [],
       isOnline: "waiting",
-      lastconnnection: '',
+      lastconnnection: "",
+      matched: false,
       Image0: false,
       Image1: false,
       Image2: false,
@@ -280,13 +251,13 @@ export default {
     };
   },
   beforeRouteLeave(to, from, next) {
-    console.log('ROUTER LEAVE');
+    //console.log("ROUTER LEAVE");
     this.sockets.unsubscribe("isOnline" + this.$route.params.username);
     next();
   },
   created() {
     document.title = this.$route.params.username + " Profile";
-    console.log('chkon 3yt 3lik');
+    //console.log("chkon 3yt 3lik");
     this.$store
       .dispatch("login", { user: this.userdata.user_name })
       .then(() => {
@@ -311,36 +282,26 @@ export default {
     }
   },
   watch: {
-    $route: function (to, from) {
+    $route: function(to, from) {
       this.sockets.unsubscribe("isOnline" + from.params.username);
       this.UpdateProfile();
     }
   },
-  mounted() {
-    // this.sockets.subscribe("isOnline" + this.$route.params.username, data => {
-    //   console.log('isOnline '+this.$route.params.username);
-    //   if (data.online) {
-    //         this.lastconnnection = '';
-    //         this.isOnline = "online";
-    //   }else{
-    //     this.isOnline = "offline";
-    //     this.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
-    //   }  
-    // });
-  },
   methods: {
     UpdateProfile() {
-      console.log("PROFILE UPDATE");
+      //console.log("PROFILE UPDATE");
+      this.matched = false;
       this.blocked = false;
       this.sockets.subscribe("isOnline" + this.$route.params.username, data => {
-          if (data.online){
-            this.lastconnnection = '';
-            this.isOnline = "online";
-          } 
-          else{
-            this.isOnline = "offline";
-            this.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
-          }
+        if (data.online) {
+          this.lastconnnection = "";
+          this.isOnline = "online";
+        } else {
+          this.isOnline = "offline";
+          this.lastconnnection = moment(data.last).format(
+            "YYYY-MM-DD HH:mm:ss"
+          );
+        }
       });
       this.UserProfile(this.$route.params.username);
     },
@@ -350,24 +311,7 @@ export default {
         this.isUserProfile = true;
         this.fill_Profile(this.userdata, this.user_Images, this.user_Tags);
         this.loading = false;
-        // console.log(this.user_Tags);
-        // console.log(this.user_Images);
       } else {
-        // /*To avoid auto visite history*/
-        // this.$http
-        //   .post("visite", { user_visited: this.$route.params.username })
-        //   .then(res => {
-        //     console.log(res.data);
-        //     this.$socket.emit("notifyUser", {
-        //       to: user,
-        //       title: "profile checked",
-        //       msg: this.userdata.user_name + " checked your profile.",
-        //       token: localStorage.getItem("token")
-        //     });
-        //   })
-        //   .catch(err => {
-        //     console.log(err);
-        //   });
         // other user profile
         this.$http
           .get("/userdata/" + user)
@@ -389,6 +333,14 @@ export default {
                 .catch(err => {
                   console.log(err);
                 });
+                this.$http.get('/matches').then(res=>{
+                  var matches = res.data.data;
+                  if (matches)
+                  matches.forEach(match => {
+                    if (match.username === user)
+                      this.matched = true;
+                  });
+                }).catch(err => {console.log(err)});
               this.fill_Profile(resdata.user, resdata.images, resdata.tags);
             } else if (
               res.data.msg === "blocked you" ||
@@ -444,7 +396,6 @@ export default {
       } else if (this.Popularity_num >= 81 && this.Popularity_num <= 100) {
         this.Popularity_type = "is-success";
       }
-      //this.tags = this.userTags;
       this.tags = tags;
       if (images[0]) {
         this.srcProfile = [];
@@ -466,12 +417,13 @@ export default {
     likebutton() {
       if (this.like_button) {
         // unliked
-        console.log(this.userdata.user_name, " unliked ", this.user);
+        //console.log(this.userdata.user_name, " unliked ", this.user);
         this.$http
           .post("unliked/" + this.user)
           .then(res => {
-            console.log(res.data);
+            //console.log(res.data);
             if (res.data === "unmatched") {
+              this.matched = false;
               this.$socket.emit("deleteroom", {
                 blocker: this.userdata.user_name,
                 blocked: this.user
@@ -489,13 +441,14 @@ export default {
         this.like_button = "";
       } else {
         // liked
-        console.log(this.userdata.user_name, " liked ", this.user);
+        //console.log(this.userdata.user_name, " liked ", this.user);
         this.$http
           .post("liked/" + this.user)
           .then(res => {
-            console.log(res.data);
+            //console.log(res.data);
             if (res.data !== "block") {
               if (res.data === "its a match") {
+                this.matched = true;
                 this.like_button = "is-danger";
                 this.$notify({
                   title: "Its A Match",
@@ -530,11 +483,12 @@ export default {
       }
     },
     report() {
-      console.log(this.userdata.user_name, " reported user ", this.user);
+      //console.log(this.userdata.user_name, " reported user ", this.user);
       this.$http
         .post("report/" + this.user)
         .then(res => {
-          console.log(res.data);
+          res;
+          //console.log(res.data);
         })
         .catch(err => {
           console.log(err);
@@ -548,7 +502,7 @@ export default {
       });
     },
     block() {
-      console.log(this.userdata.user_name, " blocked user ", this.user);
+      //console.log(this.userdata.user_name, " blocked user ", this.user);
       this.$http
         .post("block/" + this.user)
         .then(res => {

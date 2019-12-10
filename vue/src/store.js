@@ -11,9 +11,6 @@ const store = new Vuex.Store({
     },
     plugins: [createPersistedState()],
     mutations: {
-        // LOGIN(state, user){
-        //     state.data = user;
-        // },
         request(state) {
             state.status = 'loading'
         },
@@ -36,18 +33,16 @@ const store = new Vuex.Store({
     actions: {
         login({ commit }, user) {
             return new Promise(async (resolve, reject) => {
-                console.log('%c commit for ' + user.user + ' data', 'background: #222; color: #bada55');
+                // console.log('%c commit for ' + user.user + ' data', 'background: #222; color: #bada55');
                 commit('request')
                 await Vue.prototype.$http.get('/userdata/' + user.user).then(
                     res => {
                         if (res.data.success) {
                             const data = res.data.data;
                             commit('success', data)
-                            console.log('new data:');
-                            console.log(data);
                             resolve(res.data)
                         } else {
-                            console.log('%c we have error here 0', 'background: red; color: #bada55');
+                            // console.log('%c we have error here 0', 'background: red; color: #bada55');
                             if (res.data.message === "No token Provided." || res.data.message === "Failed to authenticate token.") {
                                 localStorage.removeItem('token')
                                 reject("token error");
@@ -58,7 +53,7 @@ const store = new Vuex.Store({
                         }
                     }
                 ).catch(err => {
-                    console.log('%c we have error here 1', 'background: red; color: #bada55');
+                    // console.log('%c we have error here 1', 'background: red; color: #bada55');
                     commit('error')
                     localStorage.removeItem('token')
                     reject(err)

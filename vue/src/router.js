@@ -11,7 +11,6 @@ import Account from "./views/Account";
 import Profil from "./views/Profil";
 import Profile from "./views/Profile";
 import Messages from './views/Messages';
-import Visite from './views/Visite';
 import Blocked from './views/Blocked';
 import Logout from "./views/logout";
 import Mutuallikes from './views/Mutuallikes';
@@ -23,7 +22,7 @@ import Likeyou from './views/Likeyou';
 import Reset from './views/Reset';
 import notification from './views/notification';
 import notFound from './views/404.vue';
-Vue.use(Router,{})
+Vue.use(Router, {})
 
 const router = new Router({
   mode: 'history',
@@ -32,19 +31,19 @@ const router = new Router({
       path: '/',
       name: 'home',
       component: Home,
-      meta: {title: 'Home'}
+      meta: { title: 'Home' }
     },
     {
       path: '/signup',
       name: 'signup',
       component: Signup,
-      meta: {title: 'Singup'}
+      meta: { title: 'Singup' }
     },
     {
       path: '/login',
       name: 'login',
       component: Login,
-      meta: {title: 'Login'}
+      meta: { title: 'Login' }
     },
     {
       path: '/logout',
@@ -55,14 +54,14 @@ const router = new Router({
       path: '/reset',
       name: 'reset',
       component: Reset,
-      meta: {title: 'Reset'}
+      meta: { title: 'Reset' }
     },
     {
       path: '/notification',
       name: 'notification',
       component: notification,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'notification'}
+      meta: { title: 'notification' }
     },
     {
       path: '/settings',
@@ -73,27 +72,20 @@ const router = new Router({
           path: 'account',
           name: 'account',
           component: Account,
-          meta: {title: 'Account'}
+          meta: { title: 'Account' }
         }, {
           path: 'profile',
           name: 'profil',
           component: Profil,
-          meta: {title: 'Profil'}
+          meta: { title: 'Profil' }
 
-        },
-        {
-          path: 'visite',
-          name: 'visite',
-          component: Visite,
-          beforeEnter: redirectIfNotCompleteProfil,
-          meta: {title: 'Visites'}
         },
         {
           path: 'blocked',
           name: 'blocked',
           component: Blocked,
           beforeEnter: redirectIfNotCompleteProfil,
-          meta: {title: 'Blocked'}
+          meta: { title: 'Blocked' }
         }
       ]
     }
@@ -101,76 +93,76 @@ const router = new Router({
       path: '/verify',
       name: 'verify',
       component: Verify,
-      meta: {title: 'Verify'}
+      meta: { title: 'Verify' }
     },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Dashboard'}
+      meta: { title: 'Dashboard' }
     },
     {
       path: '/profile/:username',
       name: 'profile',
       component: Profile,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Profile'}
+      meta: { title: 'Profile' }
     },
     {
       path: '/messages',
       name: 'messages',
       component: Messages,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Messages'}
+      meta: { title: 'Messages' }
     },
     {
       path: '/guests',
       name: 'guests',
       component: Guests,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Reset'}
+      meta: { title: 'Guests' }
     },
     {
       path: '/mutuallikes',
       name: 'mutuallikes',
       component: Mutuallikes,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Reset'}
+      meta: { title: 'Mutuallikes' }
     },
     {
       path: '/youlike',
       name: 'youlike',
       component: Youlike,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Youlike'}
+      meta: { title: 'Youlike' }
     },
     {
       path: '/likeyou',
       name: 'likeyou',
       component: Likeyou,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Likeyou'}
+      meta: { title: 'Likeyou' }
     },
     {
       path: '/browse',
       name: 'browse',
       component: Browse,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Browse'}
+      meta: { title: 'Browse' }
     },
     {
       path: '/search',
       name: 'search',
       component: Search,
       beforeEnter: redirectIfNotCompleteProfil,
-      meta: {title: 'Search'}
+      meta: { title: 'Search' }
     },
     {
       path: '/404',
       name: "404",
       component: notFound,
-      meta: {title: '404'}
+      meta: { title: '404' }
     },
     {
       path: "*",
@@ -184,37 +176,38 @@ router.beforeEach((to, from, next) => {
   //page title
   document.title = to.meta.title;
   var token = localStorage.getItem("token");
-  var paths = ['/login', '/', '/signup', '/logout', '/reset','/verify']
-  if (!token){
-    if (!paths.includes(to.path)){
-      console.log('path:: '+to.path);
+  var paths = ['/login', '/', '/signup', '/logout', '/reset', '/verify']
+  if (!token) {
+    if (!paths.includes(to.path)) {
+      // console.log('path:: ' + to.path);
       next('/login');
-    }else next();
+    } else next();
   }
   else next();
 });
 
 import store from './store';
-function redirectIfNotCompleteProfil (to, from, next) {
-  console.log("Tkhra 3a da7k");
+function redirectIfNotCompleteProfil(to, from, next) {
+  //console.log("Tkhra 3a da7k");
   if (store.getters) {
-      let userdata = store.getters.getUser;
-      var images = store.getters.getImages;
-      var profil;
-      if(images)
+    var userdata = store.getters.getUser;
+    var tags = store.getters.getTags;
+    var images = store.getters.getImages;
+    var profil;
+    if (images)
       images.forEach(element => {
         if (element.image_type === "PROFIL") {
           profil = element;
         }
       });
-      if(userdata)
-       { if ((!userdata.user_gender || !userdata.user_bio ||!userdata.user_prefer || !profil))
-           next('/settings/profile');
-        next();
-        }
-      }
-      else
+    if (userdata) {
+      if ((!userdata.user_gender || !userdata.user_bio || !userdata.user_prefer || !profil || !tags.length))
         next('/settings/profile');
+      next();
+    }
+  }
+  else
+    next('/settings/profile');
 }
 
 export default router;

@@ -43,7 +43,7 @@
                     style="cursor: default;"
                   >
                     <el-badge is-dot v-if="notif.read">
-                      <i class="el-icon-folder-opened" style="font-size: 1.5em;"></i>
+                      <i class="el-icon-folder" style="font-size: 1.5em;"></i>
                     </el-badge>
                     <i v-else class="el-icon-folder-opened" style="font-size: 1.5em;"></i>
                     <span class="title is-6">{{notif.title}}</span>
@@ -65,7 +65,7 @@
                 <span>Profile</span>
               </el-dropdown-item>
             </router-link>
-            <router-link class="link" to="/settings/account">
+            <router-link class="link" to="/settings/profile">
               <el-dropdown-item>
                 <b-icon pack="fas" icon="user-cog"></b-icon>
                 <span>Settings</span>
@@ -85,9 +85,9 @@
     <!-- mobile navbar -->
     <nav class="navbar is-hidden-desktop" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
-        <b-navbar-item tag="router-link" :to="{ path: '/' }">
-          <img src="@/assets/logo.png" alt="Chalada Website">
-        </b-navbar-item>
+        <div class="navbar-item">
+          <img src="./../assets/logo.png" alt="Matcha">
+        </div>
         <a
           role="button"
           class="navbar-burger"
@@ -142,7 +142,7 @@
                 <span>Profil</span>
               </div>
             </router-link>
-            <router-link class="link" :to="{ path: '/settings/account' }">
+            <router-link class="link" :to="{ path: '/settings/profile' }">
               <div class="navbar-item">
                 <b-icon pack="fas" icon="user-cog"></b-icon>
                 <span>Settings</span>
@@ -177,12 +177,6 @@ export default {
       isOpen: false
     };
   },
-  // beforeRouteLeave (to, from, next) {
-  //   console.log('beforeRouteLeave');
-  //   if (to.path === "/notification"){
-  //     next();
-  //   }else next()
-  // },
   computed: {
     user: function() {
       return this.$store.getters.getUser;
@@ -195,34 +189,13 @@ export default {
     }
   },
   created() {
-    console.log(this.user_images);
     this.update();
   },
   mounted() {
     this.$root.$on("refreshAvatar", () => {
-      console.log("REFRESHED AVATAR");
       this.imageProfil = null;
       this.update();
     });
-    // var img = this.user_images;
-    // img.forEach(element => {
-    //   if (element.image_type === "PROFIL")
-    //     this.imageProfil = element.url;
-    // });
-
-    if (!localStorage.token) {
-      console.log('LogedNavbar mounted:: token not found');
-      // if (this.$router.currentRoute.path !== "/login")
-      //   this.$router.push({ path: "/login" });
-    }
-    console.log(
-      "only here",
-      !this.user.user_gender,
-      !this.user.user_bio,
-      !this.user.user_prefer,
-      !this.user_images.length,
-      this.user_tags.length
-    );
     if (
       !this.user.user_gender ||
       !this.user.user_bio ||
@@ -235,15 +208,9 @@ export default {
     this.$socket.emit("new user", {username:this.user.user_name});
     // check for new notification
     this.$nextTick(this.checkNotif());
-    // this.$socket.on("notification", () => {
-    //   console.log("i got notification on logedNavbar.vue");
-    //   this.nbrNotification = this.nbrNotification + 1;
-    //   this.NewNotification = true;
-    // });
   },
   sockets:{
     notification: function () {
-      console.log("i got notification on logedNavbar.vue");
       this.nbrNotification = this.nbrNotification + 1;
       this.NewNotification = true;
     }
@@ -253,7 +220,6 @@ export default {
       this.$http
         .get("/newNotification")
         .then(res => {
-          console.log("new notification", res.data);
           if (res.data.length) this.nbrNotification = res.data.length;
         })
         .catch(err => console.log(err));
@@ -272,11 +238,11 @@ export default {
           console.log(err);
         });
     },
-    getNotification(username) {
+    getNotification() {
       return new Promise((resolve, reject) => {
-        console.log("send notification req!");
+        //console.log("send notification req!");
         this.$http
-          .get("/notification/" + username)
+          .get("/notification")
           .then(res => {
             var data = res.data;
             resolve(data);
@@ -288,14 +254,15 @@ export default {
       this.notifLoading = true;
       this.NewNotification = false;
       // set all notification as read
-      this.getNotification(this.user.user_name).then(
+      this.getNotification().then(
         data => {
           this.notifi = data;
-          console.log(data);
+          //console.log(data);
           this.$http
             .post("SetAllNotification/")
             .then(res => {
-              console.log(res.data);
+              res;
+              //console.log(res.data);
             })
             .catch(err => {
               console.log(err);
@@ -304,7 +271,7 @@ export default {
           this.nbrNotification = 0;
           this.notifLoading = false;
         },
-        err => console.error(err)
+        err => console.log(err)
       );
     },
     turnoff(){

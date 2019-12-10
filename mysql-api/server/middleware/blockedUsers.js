@@ -2,29 +2,29 @@ const Profile = require('../models/profilemodel');
 
 exports.blockMidllware = (req, res, next) => {
     username = req.jwt.user;
+    try{
     Profile.getBolcks(username, (err, sqlres) => {
         if (err)
             res.end();
-        else{
-            if (sqlres[0]){
+        else {
+            if (sqlres[0]) {
                 var arr = {
                     blocked: [],
-                    blockedme: [] 
+                    blockedme: []
                 };
                 sqlres.forEach(element => {
-                    if (element.blocked_user !== username){
+                    if (element.blocked_user !== username) {
                         arr.blockedme.push(element.blocked_user);
                     }
-                    else if (element.blocker_user !== username){
+                    else if (element.blocker_user !== username) {
                         arr.blocked.push(element.blocker_user);
                     }
                 });
                 req.blocked = arr;
                 next();
-                //res.end('block');
-            }else
+            } else
                 next();
-            // req.block = sqlres;
         }
     });
+} catch (err) { }
 }

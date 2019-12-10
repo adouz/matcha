@@ -23,7 +23,7 @@
   <div v-else-if="Forget_Password" class="columns is-centered">
     <form class="is-half box" @submit.prevent="reset">
       <b-field label="Email" :type="Erorrs.reset_email.err" :message="Erorrs.reset_email.msg">
-        <b-input type="email" v-model="reset_email" maxlength="30"></b-input>
+        <b-input type="email" v-model="reset_email" maxlength="50"></b-input>
       </b-field>
       <div class="level">
         <a class="level-left is-size-7" @click="ForgetPassword(false)">Sing in?</a>
@@ -69,7 +69,7 @@ export default {
     this.$http
       .get("https://ipinfo.io/json?token=63f39e0edc15d5")
       .then(res => {
-        let loc = res.data.loc.split(",");
+        let loc = String(res.data.loc).split(",");
         this.loc.lat = loc[0];
         this.loc.lng = loc[1];
         this.loc.addresse = res.data.city + ", " + res.data.country;
@@ -81,19 +81,19 @@ export default {
   methods: {
     Login() {
       if (this.validate()) {
-        this.getloacttion();
+        // this.getloacttion();
         this.$http
           .post("login", {
             user_name: this.login.toLowerCase(),
             user_password: this.password,
-            latitude: this.loc.lat,
-            longitude: this.loc.lng,
+            latitude: parseFloat(this.loc.lat),
+            longitude: parseFloat(this.loc.lng),
             user_addresse: this.loc.addresse
           })
           .then(res => {
             if (!res.data.success) {
               // error
-              console.log(res.data);
+              //console.log(res.data);
               if (res.data.error === "user") {
                 this.Erorrs.login.msg = "Wrong username";
                 this.Erorrs.login.err = "is-danger";
@@ -115,12 +115,11 @@ export default {
                   user: this.login
                 })
                 .then(data => {
-                  let imgProfil =0;
-                   data.data.images.forEach(obj => {
-                    if (obj.image_type === "PROFIL")
-                      imgProfil = 1;
-                    });
-                  console.log("HERRE",imgProfil);
+                  let imgProfil = 0;
+                  data.data.images.forEach(obj => {
+                    if (obj.image_type === "PROFIL") imgProfil = 1;
+                  });
+                  //console.log("HERRE", imgProfil);
                   if (
                     !data.data.user.user_gender ||
                     !data.data.user.user_bio ||
@@ -131,15 +130,19 @@ export default {
                   } else window.location = "/dashboard";
                 })
                 .catch(err => {
-                  console.error(err);
+                  console.log(err);
                 });
             }
           })
-          .catch(err => console.error(err));
+          .catch(err => console.log(err));
       }
     },
     validate() {
-      if (!this.login.match(/^[a-z]+([_-]?[a-z0-9])*$/g)|| this.login.length > 30 || this.login.length < 3) {
+      if (
+        !String(this.login).match(/^[a-zA-Z]+([_-]?[a-zA-Z0-9])*$/g) ||
+        this.login.length > 30 ||
+        this.login.length < 3
+      ) {
         this.Erorrs.login.err = "is-danger";
         this.Erorrs.login.msg = "please Entre a valid Username";
         return false;
@@ -148,7 +151,7 @@ export default {
         this.Erorrs.login.msg = "";
       }
       if (
-        !this.password.match(
+        !String(this.password).match(
           /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
         )
       ) {
@@ -163,11 +166,6 @@ export default {
     },
     deletemsg() {
       this.confirm = false;
-    },
-    getloacttion() {
-      navigator.geolocation.getCurrentPosition(function(position) {
-        return position.coords.latitude, position.coords.longitude;
-      });
     },
     ForgetPassword(value) {
       this.Forget_Password = value;
@@ -188,14 +186,14 @@ export default {
               this.Erorrs.reset_email.msg =
                 "There was an error. Please try again later.";
             }
-            console.log(res);
+            //console.log(res);
           })
-          .catch(err => console.error(err));
+          .catch(err => console.log(err));
       }
     },
     validate_reset(email) {
       if (
-        !email.match(
+        !String(email).match(
           /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/gi
         )
       ) {

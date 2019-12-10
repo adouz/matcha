@@ -44,12 +44,6 @@
             :key="i"
           >
             <carousel :perPage="1">
-              <el-tooltip v-if="!u.user.lastconnnection" class="item" effect="dark" :content="u.user.isOnline" placement="left">
-                <span :class="u.user.isOnline"></span>
-              </el-tooltip>
-              <el-tooltip v-else class="item" effect="dark" :content="'offline: '+u.user.lastconnnection" placement="left">
-                <span :class="u.user.isOnline"></span>
-              </el-tooltip>
               <slide v-for="(img, j) in u.Images" :key="j">
                 <img :src="img.url" alt="Avatar" class="image">
               </slide>
@@ -106,25 +100,9 @@ export default {
         this.loading = false;
       })
       .catch(err => {
-        console.error(err);
+        console.log(err);
       });
   },
-  methods: {
-    // onlinesocket() {
-    //   let users = this.users;
-    //   users.forEach(user => {
-    //     this.$socket.on("isOnline" + user.username, data => {
-    //       if (data.online){
-    //         user.lastconnnection = '';
-    //         user.isOnline = "online";
-    //       }else{
-    //         user.isOnline = "offline";
-    //         this.lastconnnection = moment(data.last).format('YYYY-MM-DD HH:mm:ss');
-    //       }  
-    //     });
-    //   });
-    // }
-  }
 };
 </script>
 <style scoped>

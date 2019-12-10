@@ -13,7 +13,7 @@
             <b-input v-model="username" maxlength="30" autocomplete="new-username"></b-input>
         </b-field>
         <b-field label="Email" :type="Errors.email.err" :message="Errors.email.msg">
-            <b-input type="email" v-model="email" maxlength="30" autocomplete="new-mail"></b-input>
+            <b-input type="email" v-model="email" maxlength="50" autocomplete="new-mail"></b-input>
         </b-field>
         <b-field label="Password" :type="Errors.password.err" :message="Errors.password.msg" >
             <b-input type="password" v-model="password" maxlength="30" autocomplete="new-password" password-reveal></b-input>
@@ -87,7 +87,7 @@ export default {
                 user_mail: this.email
                 })
                  .then( res =>{
-                     console.log(res);
+                     //console.log(res);
                     if (!res.data.success){
                         if(res.data.error)
                         {
@@ -104,7 +104,7 @@ export default {
                         this.confirm = true;
                     }
                  })
-                 .catch(err => console.error(err));
+                 .catch(err => console.log(err));
             }
         },
         validate(){   
@@ -118,7 +118,7 @@ export default {
             this.Errors.date.msg = "";
         }
 
-        if (!this.fullname.match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g) || this.fullname.length > 30 || this.fullname.length < 5){ // a-z A-Z  ' , . space -
+        if (!String(this.fullname).match(/^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g) || this.fullname.length > 30 || this.fullname.length < 5){ // a-z A-Z  ' , . space -
             this.Errors.fullname.err = "is-danger";
             this.Errors.fullname.msg = "please Entre your real name";
             return false;
@@ -127,7 +127,7 @@ export default {
             this.Errors.fullname.msg = "";
         }
 
-        if (!this.username.match(/^[a-z]+([_-]?[a-z0-9])*$/g) || this.username.length > 30 || this.username.length < 3){ //a-z 0-9 _ 2~30
+        if (!String(this.username).match(/^[a-zA-Z]+([_-]?[a-zA-Z0-9])*$/g) || this.username.length > 30 || this.username.length < 3){ //a-z 0-9 _ 2~30
             this.Errors.username.err = "is-danger";
             this.Errors.username.msg = "this username is unvalide";
             return false;
@@ -136,7 +136,7 @@ export default {
             this.Errors.username.msg = "";
         }
 
-        if (!this.email.match(/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/ig)){
+        if (!String(this.email).match(/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/ig)){
             this.Errors.email.err = "is-danger";
             this.Errors.email.msg = "please Entre a valide Email";
             return false;
@@ -145,7 +145,7 @@ export default {
             this.Errors.email.msg = "";
         }
 
-        if (!this.password.match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)){
+        if (!String(this.password).match(/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g)){
             this.Errors.password.err = "is-danger";
             this.Errors.password.msg = "your password is not strong";
             return false;

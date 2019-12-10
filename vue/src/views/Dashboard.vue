@@ -31,15 +31,6 @@
     <div class="column">
       <div class="box">
         <!-- Main -->
-
-        <!-- <el-carousel :interval="5000" arrow="always">
-    <el-carousel-item v-for="item in 4" :key="item">
-      <h3>{{ item }}</h3>
-    <img class="img"  :style="like" src="../assets/like.png">
-    <img class="img"  src="../assets/nope.png">
-     
-    </el-carousel-item>
-        </el-carousel>-->
         <div v-if="OneUser">
           <center>
             <div class="photo-box">
@@ -47,26 +38,13 @@
                 <slide v-for="(img, j) in OneUser.Images" :key="j">
                   <div class="NOPE" v-if="displayNope">NOPE</div>
                   <div class="LIKE" v-if="displayLike">LIKE</div>
-                  <!-- <img id="heart" src="../assets/likey.png"> -->
-                  <div class="MATCH" v-if="displayMatch">MATCH<img id="heart" src="../assets/likey.png"></div>
+                  <div class="MATCH" v-if="displayMatch">
+                    MATCH
+                    <img id="heart" src="../assets/likey.png">
+                  </div>
                   <img :src="img.url" alt="Avatar" class="image">
                 </slide>
               </carousel>
-              <!-- <div class="user-info">
-                <span class="location">
-                  <i class="el-icon-location"></i>
-                  {{OneUser.user.distance}} km away
-                </span>
-                <span>
-                  <br>
-
-                  <a :href="'/profile/' + OneUser.user.user_name">
-                    <i class="el-icon-user-solid"></i>
-                    {{OneUser.user.user_fullname}}
-                  </a>
-                  , {{OneUser.user.user_age}}
-                </span>
-              </div>-->
               <aside class="photo-box-caption">
                 <span class="location">
                   <i class="el-icon-location"></i>
@@ -144,7 +122,8 @@ export default {
   computed: {
     userdata: function() {
       return this.$store.getters.getUser;
-    },user_Images: function() {
+    },
+    user_Images: function() {
       return this.$store.getters.getImages;
     }
   },
@@ -153,7 +132,7 @@ export default {
   },
   methods: {
     FilterBy() {
-      console.log(this.filtreOptions);
+      //console.log(this.filtreOptions);
       this.users = _.filter(this.bkpUsers, item => {
         let inAgeRange =
           item.user.user_age <= this.filtreOptions.Age[1] &&
@@ -174,11 +153,11 @@ export default {
       });
     },
     likeclicked(username) {
-      console.log("MYM", username);
+      //console.log("MYM", username);
       this.$http
         .post("liked/" + username)
         .then(res => {
-          console.log(res.data);
+          //console.log(res.data);
           if (res.data !== "block") {
             if (res.data === "its a match") {
               this.$notify({
@@ -224,32 +203,6 @@ export default {
         });
     },
     dislikeclicked() {
-      // this.like = "display : block;";
-      // console.log(this.userdata.user_name, " liked ", this.OneUser.user.user_name);
-      //   this.$http
-      //     .post("liked/" + this.OneUser.user.user_name)
-      //     .then(res => {
-      //       if (res.data.message === "Failed to authenticate token.")
-      //         this.$router.push({ path: "/login" });
-      //         console.log(res.data);
-      //         if (res.data === 'its a match'){
-      //           this.$notify({
-      //             title: "Its A Match",
-      //             message: 'you have a new Match with '+this.OneUser.user.user_name,
-      //             type: "success",
-      //             position: "bottom-left"
-      //           });
-      //         }
-      //       this.$socket.emit("notifyUser", {
-      //         to: this.OneUser.user.user_name,
-      //         title: "liked",
-      //         msg: this.userdata.user_name + " liked  you."
-      //       });
-      //     })
-      //     .catch(err => {
-      //       console.log(err);
-      //     })
-      /*this.displayLike = false;*/
       this.displayNope = true;
       setTimeout(() => {
         this.i++;
@@ -257,49 +210,35 @@ export default {
         this.displayNope = false;
       }, 150);
     },
-    // checkProfile()
-    // {
-    //    var images = this.user_Images;
-    //     var profil;
-    //     images.forEach(element => {
-    //       if (element.image_type === "PROFIL") {
-    //         profil = element;
-    //       }
-    //     });
-    //     if ((!this.userdata.user_gender || !this.userdata.user_bio ||!this.userdata.user_prefer || !profil))
-    //       return false;
-    //     return true;
-    // },
-    Suggestions()
-    {
+    Suggestions() {
       this.$http
-      .get("suggestedUsers/")
-      .then(res => {
-        if (res.data.data) this.users = res.data.data;
-        this.loading = false;
-        this.bkpUsers = this.users;
-        this.FilterBy();
-        /*Show only interesting Profils */
-        this.users = _.filter(this.users, item => {
-          let isGood =
-            item.user.user_prefer === this.userdata.user_gender ||
-            item.user.user_prefer === "X";
-          return isGood;
+        .get("suggestedUsers/")
+        .then(res => {
+          if (res.data.data) this.users = res.data.data;
+          this.loading = false;
+          this.bkpUsers = this.users;
+          this.FilterBy();
+          /*Show only interesting Profils */
+          this.users = _.filter(this.users, item => {
+            let isGood =
+              item.user.user_prefer === this.userdata.user_gender ||
+              item.user.user_prefer === "X";
+            return isGood;
+          });
+          this.users = _.orderBy(
+            this.users,
+            [
+              function(item) {
+                return item.user.distance;
+              }
+            ],
+            ["asc"]
+          );
+          this.OneUser = this.users[this.i];
+        })
+        .catch(err => {
+          console.log(err);
         });
-        this.users = _.orderBy(
-          this.users,
-          [
-            function(item) {
-              return item.user.distance;
-            }
-          ],
-          ["asc"]
-        );
-        this.OneUser = this.users[this.i];
-      })
-      .catch(err => {
-        console.error(err);
-      });
     }
   }
 };
@@ -341,13 +280,6 @@ export default {
 .LikeNotLike:hover {
   font-size: 4rem;
 }
-/* .img {
-  z-index: 3;
-  position: relative;
-  width: 30%;
-  height: 30%;
-  bottom: 500px;
-} */
 .l-box {
   padding: 2em;
 }
@@ -489,43 +421,43 @@ export default {
   position: absolute;
 }
 
-#heart{
-  position:absolute;
+#heart {
+  position: absolute;
   width: 75%;
   padding-bottom: 20%;
-  padding-top:16%;
-  left:0;
-  right:0;
-  margin:0 auto;
+  padding-top: 16%;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
   -webkit-transition: opacity 7s ease-in-out;
   -moz-transition: opacity 7s ease-in-out;
   -o-transition: opacity 7s ease-in-out;
-  transition: opacity 7s ease-in-out;}
+  transition: opacity 7s ease-in-out;
+}
 
- @keyframes heartFadeInOut {
+@keyframes heartFadeInOut {
   0% {
-    opacity:1;
+    opacity: 1;
   }
   14% {
-    opacity:1;
+    opacity: 1;
   }
   28% {
-    opacity:0;
+    opacity: 0;
   }
   42% {
-    opacity:0;
+    opacity: 0;
   }
   70% {
-    opacity:0;
+    opacity: 0;
   }
 }
 
-#heart { 
-  animation-name: heartFadeInOut; 
+#heart {
+  animation-name: heartFadeInOut;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
   animation-duration: 0.6s;
   animation-direction: alternate;
-
 }
 </style>

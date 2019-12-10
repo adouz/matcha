@@ -23,9 +23,9 @@
     </b-navbar>
     <nav class="navbar is-light is-hidden-desktop" role="navigation" aria-label="main navigation">
       <div class="navbar-brand">
-        <b-navbar-item tag="router-link" :to="{ path: '/' }">
-          <img src="./../assets/logo.png" alt="Chalada Website">
-        </b-navbar-item>
+        <div class="navbar-item">
+          <img src="./../assets/logo.png" alt="Matcha">
+        </div>
         <a
           role="button"
           class="navbar-burger"

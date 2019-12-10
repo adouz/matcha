@@ -1,7 +1,7 @@
 const Visite = require('../models/visitehistorymodel');
 const messages = require('../models/messagesmodel');
 function validate_username(username) {
-    if (!username.match(/^[a-z]+([_-]?[a-z0-9])*$/g))
+    if (!String(username).match(/^[a-z]+([_-]?[a-z0-9])*$/g) || username.lenght > 30)
         return false;
     return true;
 }
@@ -9,12 +9,14 @@ function validate_username(username) {
 exports.addViste = (req, res) => {
     let data = req.body;
     let username = req.jwt.user;
-    console.log(req.jwt);
+    //console.log(req.body);
     if (data.user_visited !== username)
-        try{Visite.addVisite(data.user_visited, username, (err, sqlres) => {
+        try{
+            Visite.addVisite(data.user_visited, username, (err, sqlres) => {
             if (err)
                 res.end();
-            });}catch (err) {}
+            });
+        }catch (err) {}
     res.end();
 }
 
@@ -33,14 +35,16 @@ exports.getVisitorsInfo = async (req, res) => {
     const username = req.jwt.user;
     var resarray = [];
     if (validate_username(username)) {
-        try {await Visite.getVisites(username).then(
+        try {
+            await Visite.getVisites(username).then(
             async (res) => {
                 for (const item of res) {
                     var obj = {};
                         obj.username = item.user;
                         obj.date = item.date;
                         obj.time = item.time;
-                        try{await messages.getProfilInfo(obj.username).then(
+                        try{
+                            await messages.getProfilInfo(obj.username).then(
                         (info) => {
                             if (info[0]) {
                                 obj.url = info[0].imgurl;
@@ -53,14 +57,14 @@ exports.getVisitorsInfo = async (req, res) => {
                                  resarray.push(obj);
                             }
                         },
-                        (err) => { console.log(err) }
+                        (err) => { /*console.log(err)*/ }
                     )
                 }catch (err) {}
-                    console.log('data:', obj);
+                    //console.log('data:', obj);
                    
                 }
             },
-            (err) => { console.log(err) }
+            (err) => { /*console.log(err)*/ }
         );
     }catch (err) {}
         return res.json({

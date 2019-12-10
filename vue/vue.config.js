@@ -1,6 +1,6 @@
 module.exports = {
+    transpileDependencies: [/node_modules/],
     devServer: {
-        proxy: 'http://localhost:8081/'
-    }
-  }
-  
+        host: '0.0.0.0'
+    }    
+}

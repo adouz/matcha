@@ -7,7 +7,7 @@ export default {
   mounted() {
     var userdata = this.$store.getters.getUser;
     if(userdata){
-        console.log(userdata);
+        //console.log(userdata);
     this.$socket.emit('logout', {username: userdata.user_name});
     this.$store
       .dispatch("logout")

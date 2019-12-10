@@ -13,10 +13,6 @@ global.appSecret = "matchawebappsecret";
 global.host = ip.address();
 console.log ( 'host ip:',ip.address());
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
-/*bodyParser = {
-  json: {limit: '50mb', extended: true},
-  urlencoded: {limit: '50mb', extended: true}
-};*/
 app.use(bodyParser.json({limit: '50mb', extended: true}));
 app.use(cors());
 app.use((err, req, res, next) => {
@@ -36,10 +32,14 @@ require('./sockets').listen(server);
 
 const dir = path.join(__dirname , '../uploads');
 app.use('/uploads', express.static(dir));
+const dirl = path.join(__dirname , '../../vue/dist');
+app.use('/', express.static(dirl));
 
 var routes = require('./routes/routes');
-app.use('/', routes);
-/*
-var routes = require('./routes');
-routes(app);
-*/
+app.use('/api', routes);
+//check % HERE !!
+app.get(/%/, (req, res) =>{
+  res.redirect('/');
+});
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(dirl, 'index.html'))})

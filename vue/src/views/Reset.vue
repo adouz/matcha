@@ -27,7 +27,7 @@
   </div>
   <div class="columns is-centered" v-else>
     <div class="box has-text-centered">
-      <div :class="type">
+      <div>
         <p class="has-text-weight-bold is-size-4">{{ msg }}</p>
       </div>
     </div>
@@ -55,12 +55,13 @@ export default {
     };
   },
   mounted() {
+    if (localStorage.token) this.$router.push({ path: "/dashboard" });
     var token = this.token;
     var email = this.email;
     this.$http
       .post("/verifyRestPasswd", { token: token, email: email })
       .then(res => {
-        console.log(res.data);
+        //console.log(res.data);
         if (res.data !== "valid") {
           if (res.data === "invalid email" || res.data === "invalid token") {
             this.msg = "You have error in your URL";
@@ -78,7 +79,7 @@ export default {
       .catch(err => {
         console.log(err);
       });
-    console.log(token, email);
+    //console.log(token, email);
   },
   methods: {
     changepasswd() {
@@ -90,7 +91,7 @@ export default {
             password: this.password
           })
           .then(res => {
-            console.log(res.data);
+            //console.log(res.data);
             if (res.data === "done") {
               this.done = true;
             } else if (res.data === "error") {
@@ -105,7 +106,7 @@ export default {
     },
     validate_password() {
       if (
-        !this.password.match(
+        !String(this.password).match(
           /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[#$^+=!*()@%&]).{8,30}$/g
         )
       ) {

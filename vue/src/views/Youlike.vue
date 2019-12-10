@@ -44,12 +44,12 @@
             :key="i"
           >
             <carousel :perPage="1">
-              <el-tooltip v-if="!u.user.lastconnnection" class="item" effect="dark" :content="u.user.isOnline" placement="left">
+              <!-- <el-tooltip v-if="!u.user.lastconnnection" class="item" effect="dark" :content="u.user.isOnline" placement="left">
                       <span :class="u.user.isOnline"></span>
               </el-tooltip>
               <el-tooltip v-else class="item" effect="dark" :content="'offline: '+u.user.lastconnnection" placement="left">
                       <span :class="u.user.isOnline"></span>
-              </el-tooltip>
+              </el-tooltip> -->
               <slide v-for="(img, j) in u.Images" :key="j">
                 
                 <img :src="img.url" alt="Avatar" class="image">
@@ -112,7 +112,7 @@ export default {
         this.loading = false;
       })
       .catch(err => {
-        console.error(err);
+        console.log(err);
       });
   },
   methods: {

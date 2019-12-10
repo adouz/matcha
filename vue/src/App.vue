@@ -17,7 +17,7 @@ export default {
   data() {
     return {
       err: false,
-      pages1: ["login", "signup", "home", "verify", "reset"],
+      pages1: ["login", "signup", "verify", "reset"],
       pages2: [
         "settings",
         "dashboard",
@@ -44,7 +44,6 @@ export default {
   },
   sockets:{
     notification: function (data) {
-      console.log('i got notification on APP.vue');
       this.notifyUser(data);
     }
   },
@@ -52,16 +51,6 @@ export default {
     username: function() {
       return this.$store.getters.getUser.user_name;
     }
-  },
-  mounted() {
-    // console.log('%cMOVE ALONG! NOTHING TO SEE HERE', 'font-size: 40px; color: blue');
-    // console.log('%c ', 'font-size:800px; background:url(https://s5.gifyu.com/images/tenor.gif) no-repeat;');
-
-    //this.$socket.emit("new user", this.username);
-    // this.$socket.on("notification", data => {
-    //   console.log('i got notification on APP.vue');
-    //   this.notifyUser(data);
-    // });
   },
   methods: {
     notifyUser(data) {
@@ -72,7 +61,7 @@ export default {
       });
     }
   }
-}; /* Check if is valide Token */
+};
 </script>
 
 <style>

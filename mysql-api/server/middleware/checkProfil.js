@@ -3,6 +3,7 @@ const Filter = require('../models/filtermodel');
 exports.checkProfil = (req, res, next) => {
     username = req.jwt.user;
     let data = [];
+    try{
     Filter.getProfilInfo(username).then(
         (resUser) => {
             data = resUser[0];
@@ -11,11 +12,12 @@ exports.checkProfil = (req, res, next) => {
             }else{
                 res.send('Incomplete profile');
             }
-            console.log(data);
+            //console.log(data);
         },
         (err) => {
-            console.log(err);
+            //console.log(err);
             next(false);        
         }
     )
+} catch (err) { }
 }

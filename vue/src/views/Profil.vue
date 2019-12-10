@@ -1,5 +1,6 @@
 <template>
   <div class="columns">
+    <v-dialog/>
     <div class="column is-one-fifth">
       <div class="box">
         <!-- Menu  -->
@@ -85,7 +86,15 @@
             :type="Errors.fullname.err"
             :message="Errors.fullname.msg"
           >
-            <b-input v-model="user.user_fullname" expanded></b-input>
+            <b-input v-model="user.user_fullname" expanded maxlength="30"></b-input>
+          </b-field>
+          <b-field
+            label="Birthdate"
+            :label-position="labelPosition"
+            :type="Errors.date.err"
+            :message="Errors.date.msg"
+          >
+            <b-datepicker v-model="date" placeholder="Click to select..."></b-datepicker>
           </b-field>
           <br>
           <b-field
@@ -124,16 +133,21 @@
           <vue-tags-input
             v-model="tag"
             :tags="tags"
+            :max-tags="7"
+            :maxlength="30"
             :autocomplete-items="filteredItems"
             @tags-changed="newTags => tags = newTags"
           />
+
           <br>
+
           <b-field
             label="Choose your sexual preference"
             :label-position="labelPosition"
             :type="Errors.sexualpreference.err"
             :message="Errors.sexualpreference.msg"
           ></b-field>
+
           <b-field grouped>
             <b-button
               size="10"
@@ -170,7 +184,7 @@
             :message="Errors.bio.msg"
             label="Bio"
           >
-            <b-input v-model="user.user_bio" maxlength="200" type="textarea"></b-input>
+            <b-input v-model="user.user_bio" maxlength="300" type="textarea"></b-input>
           </b-field>
 
           <section>
@@ -225,13 +239,7 @@
             </el-dialog>
           </section>
           <!-- MAP-->
-          <b-field
-            :label-position="labelPosition"
-            label="choose your location"
-          ></b-field>
-          <!-- <map-location-selector :latitude="32.8811" :longitude="-6.9063"
-  @locationUpdated="locationUpdated">
-          </map-location-selector>-->
+          <b-field :label-position="labelPosition" label="choose your location"></b-field>
           <gmap-map
             ref="gmap"
             :center="center"
@@ -240,12 +248,6 @@
             @click="LocationUpdated"
           >
             <GmapMarker v-if="start" :position="start"/>
-            <!-- <gmap-marker
-        :key="index"
-        v-for="(m, index) in markers"
-        :position="m.position"
-        @click="toggleInfoWindow(m,index)">
-            </gmap-marker>-->
           </gmap-map>Your current location is :
           <strong>{{user.user_addresse}}</strong>
           <b-message v-if="err" type="is-danger">
@@ -265,9 +267,8 @@
     async defer></script>
 
 <script>
-import axios from "axios";
 import VueTagsInput from "@johmun/vue-tags-input";
-axios.defaults.baseURL = "http://10.11.2.12:3000/";
+import moment from "moment";
 
 export default {
   name: "UpdateProfil",
@@ -276,6 +277,7 @@ export default {
   },
   data() {
     return {
+      date: new Date(),
       start: null,
       center: { lat: 132.004, lng: -6.0011 },
       dialogImageUrl: "",
@@ -340,6 +342,10 @@ export default {
         uploadProfilImage: {
           err: null,
           msg: null
+        },
+        date: {
+          err: null,
+          msg: null
         }
       }
     };
@@ -349,6 +355,7 @@ export default {
       .dispatch("login", { user: this.user.user_name })
       .then(res => {
         var images = res.data.images;
+        var tags = res.data.tags;
         var profil;
         images.forEach(element => {
           if (element.image_type === "PROFIL") {
@@ -357,9 +364,11 @@ export default {
         });
         if (
           (!this.user.user_gender ||
-          !this.user.user_bio ||
-          !this.user.user_prefer ||
-          !profil) && to.path !== "/logout"
+            !this.user.user_bio ||
+            !this.user.user_prefer ||
+            !profil ||
+            !tags.length) &&
+          to.path !== "/logout"
         ) {
           this.$message({
             message: "Warning, you have to fill your profile first",
@@ -372,7 +381,7 @@ export default {
       });
   },
   created() {
-    console.log(this.user_images);
+    //console.log(this.user_images);
     this.$store
       .dispatch("login", { user: this.user.user_name })
       .then(res => {
@@ -384,9 +393,6 @@ export default {
     this.loadingIMG = false;
   },
   mounted() {
-    // console.log(this.user);
-    // console.log(this.user_images);
-    // console.log(this.user_tags);
     if (!localStorage.token) this.$router.push({ path: "/login" });
     else
       this.$http.defaults.headers.common["x-access-token"] = localStorage.token;
@@ -423,6 +429,7 @@ export default {
   },
   methods: {
     updateProfile() {
+      this.date = new Date(this.user.user_birthdate);
       if (this.user.user_gender == "M") this.man = "is-info";
       else if (this.user.user_gender == "F") this.woman = "is-danger";
       if (this.user.user_prefer == "M") this.men = "is-info";
@@ -433,7 +440,7 @@ export default {
         .then(res => (this.autocompleteItems = res.data))
         .catch(err => console.log(err));
       this.tags = this.user_tags;
-      console.log("before filling::: ", this.user_images);
+      //console.log("before filling::: ", this.user_images);
       this.user_images.forEach((element, index) => {
         if (this.user_images[index].image_type != "PROFIL")
           this.dropFiles.push(this.user_images[index]);
@@ -449,12 +456,14 @@ export default {
       this.start = m.latLng;
       this.geoCoder(m.latLng, res => {
         let addresse = "";
-        if(res.address_components[res.address_components.length-4])
-          addresse+= res.address_components[res.address_components.length-4].long_name+", ";
-        if(res.address_components[res.address_components.length-1])
-          addresse+= res.address_components[res.address_components.length-1].long_name;
-        console.log("ADRESSE->", addresse,res);
-        //this.user.user_addresse = addresse;
+        if (res.address_components[res.address_components.length - 4])
+          addresse +=
+            res.address_components[res.address_components.length - 4]
+              .long_name + ", ";
+        if (res.address_components[res.address_components.length - 1])
+          addresse +=
+            res.address_components[res.address_components.length - 1].long_name;
+        //console.log("ADRESSE->", addresse, res);
         this.user.user_addresse = res.formatted_address;
         this.user.longitude = res.geometry.location.lng();
         this.user.latitude = res.geometry.location.lat();
@@ -468,14 +477,6 @@ export default {
         }
       });
     },
-    /*locationUpdated(latlng) {
-      this.latitude = latlng.lat;
-      this.longitude = latlng.lng;
-      this.axios
-      .get("https://api.opencagedata.com/geocode/v1/json?q="+this.latitude+this.longitude+"&key="+this.keygeorev)
-      .then(res => (this.location = res.data))
-      .catch(err => console.log(err));
-  },*/
     getDataUrl(img) {
       // console.log(img);
       img.crossOrigin = "Anonymous";
@@ -528,7 +529,6 @@ export default {
     AddProfilImage(file, imageProfil) {
       this.loadImage(imageProfil[imageProfil.length - 1].url)
         .then(() => {
-          // console.log(imageProfil[imageProfil.length - 1].size);
           if (imageProfil[imageProfil.length - 1].size < 1000000) {
             this.imageProfil = imageProfil.slice(-1);
           } else {
@@ -539,39 +539,51 @@ export default {
         .catch(() => this.imageProfil.splice(imageProfil.length - 1, 1));
     },
     handleRemove(file) {
-      // console.log(file.uid);
-      this.dropFiles.forEach((element, index) => {
-        if (element.uid === file.uid) {
-          // console.log(element.image_id);
-          this.dropFiles.splice(index, 1);
-          this.user_images.splice(index, 1);
-          this.$http
-            .post("/imagesdel/" , {
-              image_id: element.image_id
-            })
-            .then(res => {
-              res.data;
-            })
-            .catch(err => console.error(err));
-        }
-      });
-      this.imageProfil.forEach((element, index) => {
-        if (element.uid === file.uid) {
-          // console.log(this.imageProfil[index]);
-          this.imageProfil.splice(index, 1);
-          this.user_images.splice(index, 1);
-          this.$http
-            .post("/imagesdel/" , {
-              image_id: element.image_id
-            })
-            .then(res => {
-              res.data;
-              console.log("call REFRESH");
-              this.$root.$emit("refreshAvatar");
-              //window.location.reload()
-            })
-            .catch(err => console.error(err));
-        }
+      this.$modal.show("dialog", {
+        title: "Delete!",
+        text: "Are you sure you want to delete this image?",
+        buttons: [
+          {
+            title: "Yes",
+            default: true, // Will be triggered by default if 'Enter' pressed.
+            handler: () => {
+              this.dropFiles.forEach((element, index) => {
+                if (element.uid === file.uid) {
+                  this.dropFiles.splice(index, 1);
+                  this.user_images.splice(index, 1);
+                  this.$http
+                    .post("/imagesdel/", {
+                      image_id: element.image_id
+                    })
+                    .then(res => {
+                      res.data;
+                    })
+                    .catch(err => console.log(err));
+                }
+              });
+              this.imageProfil.forEach((element, index) => {
+                if (element.uid === file.uid) {
+                  this.imageProfil.splice(index, 1);
+                  this.user_images.splice(index, 1);
+                  this.$http
+                    .post("/imagesdel/", {
+                      image_id: element.image_id
+                    })
+                    .then(res => {
+                      res.data;
+                      //console.log("call REFRESH");
+                      this.$root.$emit("refreshAvatar");
+                    })
+                    .catch(err => console.log(err));
+                }
+              });
+              this.$modal.hide("dialog");
+            }
+          },
+          {
+            title: "No" // Button title
+          }
+        ]
       });
     },
     handlePictureCardPreview(file) {
@@ -585,9 +597,9 @@ export default {
       fileLink.setAttribute("download", "Picture.png");
       document.body.appendChild(fileLink);
       fileLink.click();
-      // console.log(file);
     },
     UpdateProfil() {
+      this.err = false;
       if (this.validate()) {
         /* Add new tags to tags Table */
         if (this.newTags) {
@@ -599,23 +611,28 @@ export default {
             })
             .then(res => res.data)
             .catch(err => console.log(err));
-            console.log("newtags", this.newTags,
-              "selectedtags :", this.selectedTags,
-              "user_id :", this.user.user_id)
+          // console.log(
+          //   "newtags",
+          //   this.newTags,
+          //   "selectedtags :",
+          //   this.selectedTags,
+          //   "user_id :",
+          //   this.user.user_id
+          // );
         }
-        // console.log(this.user);
-        var user_data = this.user;
         /* Update user */
-        // console.log(this.user_location.latitude);
+        let old = new Date(this.date).toLocaleDateString();
+        let date = moment(old, "MM/DD/YYYY").format("YYYY-MM-DD");
         this.$http
           .put("users/", {
-            user_fullname: user_data.user_fullname,
-            user_gender: user_data.user_gender,
-            user_bio: user_data.user_bio,
-            user_prefer: user_data.user_prefer,
-            user_addresse: user_data.user_addresse,
-            longitude: user_data.longitude,
-            latitude: user_data.latitude
+            user_fullname: this.user.user_fullname,
+            user_gender: this.user.user_gender,
+            user_bio: this.user.user_bio,
+            user_prefer: this.user.user_prefer,
+            user_addresse: this.user.user_addresse,
+            longitude: this.user.longitude,
+            latitude: this.user.latitude,
+            user_birthdate: date
           })
           .then(res => {
             if (!res.data.success) {
@@ -623,54 +640,62 @@ export default {
             } else {
               this.confirm = true;
             }
-            //this.$store.dispatch("update", user_data);
           })
-          .catch(err => console.error(err));
-        console.log(this.dropFiles.length, "+++ ", this.imageProfil);
+          .catch(err => console.log(err));
+        //console.log(this.dropFiles.length, "+++ ", this.imageProfil);
         /* Upload images */
-        if (this.dropFiles.length > 0 || this.imageProfil.length > 0) {
-          const images = [];
-          this.dropFiles.forEach(element => {
-            let image = new Image();
-            image.src = element.url;
-            if (!element.image_type)
-              images.push({ image: this.getDataUrl(image), type: "other" });
-          });
-          this.imageProfil.forEach(element => {
-            let image = new Image();
-            image.src = element.url;
-            if (!element.image_type)
-              images.push({ image: this.getDataUrl(image), type: "profil" });
-          });
-          console.log(images);
-          console.log(this.user_images);
-          if (images.length > 0) {
-            this.loadingFORM = true;
-            this.$http
-              .post("/images", images)
-              .then(res => {
-                console.log(res.data.data);
-                console.log("BEFORE", this.user_images);
-                var data = res.data.data;
-                // for (item in res.data)
-                // {
-                //     console.log(item);
-                // }
-                data.forEach(element => {
-                  this.user_images.push(element);
-                  console.log("element", element);
-                  if (element.image_type === "profil") {
-                    console.log("call REFRESH");
-                    this.$root.$emit("refreshAvatar");
-                    //window.location.reload()
-                  }
-                });
-                // this.user_images.push(res.data);
-                console.log("AFTER", this.user_images);
-                this.loadingFORM = false;
-              })
-              .catch(err => console.error(err));
+        if (!this.err) {
+          if (this.dropFiles.length > 0 || this.imageProfil.length > 0) {
+            const images = [];
+            this.dropFiles.forEach(element => {
+              let image = new Image();
+              //console.log("HERE OTHER ",element);
+              image.src = element.url;
+              if (!element.image_type)
+                {
+                  images.push({ image: this.getDataUrl(image), type: "other" });
+                  element.image_type = "other";         
+                }
+            });
+            this.imageProfil.forEach(element => {
+              let image = new Image();
+              //console.log("HERE Profil ",element);
+              image.src = element.url;
+              if (!element.image_type)
+                {
+                  images.push({ image: this.getDataUrl(image), type: "profil" });
+                  element.image_type = "profil";
+                }
+            });
+            //console.log(images);
+            //console.log(this.user_images);
+            if (images.length > 0) {
+              this.loadingFORM = true;
+              this.$http
+                .post("/images", images)
+                .then(res => {
+                 // console.log(res.data.data);
+                  //console.log("BEFORE", this.user_images);
+                  var data = res.data.data;
+                  data.forEach(element => {
+                    this.user_images.push(element);
+                    //console.log("element", element);
+                    if (element.image_type === "profil") {
+                      //console.log("call REFRESH");
+                      this.$root.$emit("refreshAvatar");
+                    }
+                  });
+                  //console.log("AFTER", this.user_images);
+                  images.length = 0;
+                  this.loadingFORM = false;
+                })
+                .catch(err => console.log(err));
+            }
           }
+          this.$message({
+            message: "Your profile updated successfully.",
+            type: "success"
+          });
         }
       }
     },
@@ -703,9 +728,18 @@ export default {
       this.user.user_gender = "F";
     },
     validate() {
+      let age = moment().diff(new Date(this.date), "years");
+      if (age < 18 || !this.date) {
+        this.Errors.date.err = "is-danger";
+        this.Errors.date.msg = "you have to be more than 18";
+        return false;
+      } else {
+        this.Errors.date.err = "is-success";
+        this.Errors.date.msg = "";
+      }
       // console.log(this.user);
       if (
-        !this.user.user_fullname.match(
+        !String(this.user.user_fullname).match(
           /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/g
         ) ||
         this.user.user_fullname.length > 30 ||
@@ -722,7 +756,7 @@ export default {
 
       if (
         !this.user.user_gender ||
-        !this.user.user_gender.match(/^\b[FM]{1}\b/g)
+        !String(this.user.user_gender).match(/^\b[FM]{1}\b/g)
       ) {
         this.Errors.gender.err = "is-danger";
         this.Errors.gender.msg = "Please choose a gender";
@@ -731,8 +765,18 @@ export default {
         this.Errors.gender.err = "is-success";
         this.Errors.gender.msg = "";
       }
-
-      if (!this.user.user_prefer || !this.user.user_prefer.match(/^\b[MFX]{1}\b/g)) {
+      if (this.selectedTags <= 0) {
+        this.Errors.tags.err = "is-danger";
+        this.Errors.tags.msg = "Please choose at least one tag";
+        return false;
+      } else {
+        this.Errors.tags.err = "is-success";
+        this.Errors.tags.msg = "";
+      }
+      if (
+        !this.user.user_prefer ||
+        !String(this.user.user_prefer).match(/^\b[MFX]{1}\b/g)
+      ) {
         this.Errors.sexualpreference.err = "is-danger";
         this.Errors.sexualpreference.msg = "Please choose a sexual preference";
         return false;
@@ -740,7 +784,7 @@ export default {
         this.Errors.sexualpreference.err = "is-success";
         this.Errors.sexualpreference.msg = "";
       }
-      if (this.imageProfil.length < 0) {
+      if (this.imageProfil.length <= 0) {
         this.Errors.uploadProfilImage.err = "is-danger";
         this.Errors.uploadProfilImage.msg = "Please upload a profil picture";
         return false;
@@ -748,7 +792,7 @@ export default {
         this.Errors.uploadProfilImage.err = "is-success";
         this.Errors.uploadProfilImage.msg = "";
       }
-      if (!this.user.user_bio ||!this.user.user_bio.match(/.*\S.*/)) {
+      if (!this.user.user_bio || !String(this.user.user_bio).match(/.*\S.*/)) {
         this.Errors.bio.err = "is-danger";
         this.Errors.bio.msg = "Please write something about you";
         return false;

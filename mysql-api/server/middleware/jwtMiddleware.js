@@ -6,7 +6,7 @@ exports.jwtMidleware = (req, res, next) => {
         try {
             jwt.verify(token, appSecret, (err, decoded) => {
             if (err){
-                console.log('Failed to authenticate token.');
+                //console.log('Failed to authenticate token.');
                 return res.json({
                     success: false,
                     message: "Failed to authenticate token."
@@ -18,7 +18,7 @@ exports.jwtMidleware = (req, res, next) => {
         });
     }catch (err) {}
     }else{
-        console.log('No token Provided.');
+        //console.log('No token Provided.');
         return res.send({
             success: false,
             message: "No token Provided."

@@ -7,10 +7,10 @@ exports.userdata = (req, res) => {
     var username = req.params.username.toLowerCase();
     var blocked = req.blocked;
     if (blocked && blocked.blockedme.includes(username)){
-        console.log(username+' blocked you');
+        //console.log(username+' blocked you');
         res.send({msg:'blocked you', user: username});
     }else if (blocked && blocked.blocked.includes(username)){
-        console.log('you blocked '+username);
+        //console.log('you blocked '+username);
         res.send({msg:'you blocked', user: username});
     }else{
         if (!username) {
@@ -18,7 +18,7 @@ exports.userdata = (req, res) => {
                 success: false,
                 error: 'username undefined'
             });
-        } else if (!username.match(/^[a-z]+([_-]?[a-z0-9])*$/g)) {
+        } else if (!String(username).match(/^[a-z]+([_-]?[a-z0-9])*$/g) || username.length > 50) {
             return res.json({
                 success: false,
                 error: 'username is wrong'
@@ -43,7 +43,6 @@ exports.userdata = (req, res) => {
                                 Tag.getUserTags(sqlres[0].user_id, (err, tagres) => {
                                     if (err)
                                     return res.end();
-                                    //TODO: need user liked users and blocked users
                                     try{
                                         Likes.LikedUsers(username, (err, likesres) => {
                                             if (err)
