@@ -10,7 +10,12 @@ Matcha is a project part of the [42](<https://en.wikipedia.org/wiki/42_(school)>
 - MySQL
 
 ## Screenshots
-![alt text](./screenshots/1.png)
+![screenshots/1.png](./screenshots/1.png)
+![screenshots/2.png](./screenshots/2.png)
+![screenshots/3.png](./screenshots/3.png)
+![screenshots/4.png](./screenshots/4.png)
+![screenshots/5.png](./screenshots/5.png)
+![screenshots/6.png](./screenshots/6.png)
 
 ## How to Run
 
