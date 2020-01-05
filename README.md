@@ -9,12 +9,6 @@ Matcha is a project part of the [42](<https://en.wikipedia.org/wiki/42_(school)>
 - Socket.IO
 - MySQL
 
-## To-do
-- [ ] Profil.vue: why bio variable goes away if profile image is deleted for new user
-- [ ] change css of profiles card
-- [ ] need some improvement in UI
-- [ ] add .env variables
-
 ## How to Run
 
 ### build vue first
