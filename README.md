@@ -1,4 +1,4 @@
-# Matcha With Nodejs + Expressjs + Vuejs
+# Matcha With Mysql + Expressjs + Vuejs
 ## about
 Matcha is a project part of the [42](<https://en.wikipedia.org/wiki/42_(school)>) curses Which we students build a Dating Website With many features
 
