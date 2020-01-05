@@ -9,6 +9,9 @@ Matcha is a project part of the [42](<https://en.wikipedia.org/wiki/42_(school)>
 - Socket.IO
 - MySQL
 
+## Screenshots
+![alt text](./screenshots/1.png)
+
 ## How to Run
 
 ### build vue first
