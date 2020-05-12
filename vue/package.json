@@ -16,7 +16,7 @@
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-polyfill": "^6.26.0",
     "babel-runtime": "^6.26.0",
-    "buefy": "^0.8.4",
+    "buefy": "^0.8.18",
     "core-js": "^2.6.10",
     "element-ui": "^2.12.0",
     "emoji-mart-vue-fast": "^6.1.2",
