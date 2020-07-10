@@ -22,7 +22,7 @@
     "emoji-mart-vue-fast": "^6.1.2",
     "geolib": "^3.1.0",
     "gmaps-address-locator": "^1.0.34",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.16",
     "moment": "^2.24.0",
     "purecss": "^1.0.1",
     "regenerator-runtime": "^0.13.3",
